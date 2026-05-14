@@ -74,9 +74,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": ""
+        "projectId": "b44553a2-b16c-4c0b-9940-a5cd99803a80"
       }
     },
-    "owner": "01BilalAhmad"
+    "owner": "orderbookerapp"
   }
 }
