@@ -175,7 +175,7 @@ const txnStyles = StyleSheet.create({
 
 export default function LedgerScreen() {
   const insets = useSafeAreaInsets();
-  const { user, distributorPhone } = useAuth();
+  const { user, distributorPhone, selectedCompanyId, companies } = useAuth();
   const { allShops, isLoadingAll, loadAllShops } = useShops();
 
   const [showShopPicker, setShowShopPicker] = useState(false);
@@ -207,7 +207,7 @@ export default function LedgerScreen() {
     if (!ledger) return;
     setIsGeneratingPdf(true);
     try {
-      await downloadLedgerPdf(ledger, user?.companyName, distributorPhone || undefined);
+      await downloadLedgerPdf(ledger, selectedCompanyId ? companies.find((c) => c.companyId === selectedCompanyId)?.companyName : user?.companyName, distributorPhone || undefined);
     } catch (e: any) {
       Alert.alert('PDF Error', e.message || 'Failed to generate PDF. Please try again.');
     } finally {
@@ -481,8 +481,8 @@ export default function LedgerScreen() {
                     <Text style={styles.shopPickerArea}>{item.area}</Text>
                   </View>
                   <View style={styles.shopPickerRight}>
-                    <Text style={[styles.shopPickerBalance, { color: getShopDisplayBalance(item, user?.companyId).balance > 0 ? Colors.danger : Colors.primary }]}>
-                      {formatPKR(getShopDisplayBalance(item, user?.companyId).balance)}
+                    <Text style={[styles.shopPickerBalance, { color: getShopDisplayBalance(item, selectedCompanyId || user?.companyId).balance > 0 ? Colors.danger : Colors.primary }]}>
+                      {formatPKR(getShopDisplayBalance(item, selectedCompanyId || user?.companyId).balance)}
                     </Text>
                     {item.id === selectedShop?.id ? (
                       <MaterialIcons name="check-circle" size={16} color={Colors.primary} />

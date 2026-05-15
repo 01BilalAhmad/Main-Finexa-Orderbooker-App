@@ -9,6 +9,19 @@ export interface CompanyBalance {
   company?: { id: string; name: string };
 }
 
+export interface UserCompany {
+  id: string;
+  companyId: string;
+  companyName: string;
+  isPrimary: boolean;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  distributorPhone?: string;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -19,6 +32,7 @@ export interface User {
   allRoutesEnabled?: boolean;
   companyId?: string;
   companyName?: string;
+  companies?: UserCompany[]; // NEW - multiple companies
   createdAt: string;
 }
 
@@ -109,6 +123,12 @@ export interface RecoverySummaryResponse {
   date: string;
   grandTotalRecovery: number;
   orderbookers: RecoverySummaryOrderbooker[];
+  companyBreakdown?: {
+    companyId: string;
+    companyName: string;
+    totalRecovery: number;
+    shops: number;
+  }[];
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -150,14 +170,18 @@ export const ApiService = {
       body: JSON.stringify({ userId, currentPassword, newPassword }),
     }),
 
-  getShops: (params: { orderbookerId?: string; routeDay?: string; search?: string; balanceOnly?: boolean }) => {
+  getShops: (params: { orderbookerId?: string; routeDay?: string; search?: string; balanceOnly?: boolean; companyId?: string }) => {
     const q = new URLSearchParams();
     if (params.orderbookerId) q.set('orderbookerId', params.orderbookerId);
     if (params.routeDay) q.set('routeDay', params.routeDay);
     if (params.search) q.set('search', params.search);
     if (params.balanceOnly !== undefined) q.set('balanceOnly', String(params.balanceOnly));
+    if (params.companyId) q.set('companyId', params.companyId);
     return request<Shop[]>(`/api/shops?${q.toString()}`);
   },
+
+  getUserCompanies: (userId: string) =>
+    request<UserCompany[]>(`/api/companies?userId=${userId}`),
 
   submitRecovery: (payload: {
     shopId: string;
@@ -261,6 +285,10 @@ export const ApiService = {
       method: 'PATCH',
       body: JSON.stringify({ userId, phone }),
     }),
+
+  // Fetch companies for a user
+  fetchCompanies: (userId: string) =>
+    request<UserCompany[]>(`/api/companies?userId=${userId}`),
 
   // Fetch distributor phone from company settings (for receipts)
   fetchDistributorPhone: (companyId?: string) => {

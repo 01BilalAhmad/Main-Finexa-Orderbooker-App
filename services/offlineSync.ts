@@ -101,7 +101,9 @@ export async function syncOfflineRecoveries(): Promise<SyncResult> {
         let companyId: string | undefined;
         try {
           const user = await StorageService.getUser();
-          companyId = user?.companyId || undefined;
+          // Prefer selectedCompanyId from storage, fall back to user.companyId
+          const selectedCompanyId = await StorageService.getSelectedCompanyId();
+          companyId = selectedCompanyId || user?.companyId || undefined;
         } catch {}
 
         await ApiService.submitRecovery({

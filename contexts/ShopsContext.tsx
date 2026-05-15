@@ -24,11 +24,11 @@ export interface ShopsContextType {
   isSyncing: boolean;
   lastSyncTime: string | null;
   syncStatus: 'idle' | 'syncing' | 'success' | 'error';
-  loadTodayShops: (userId: string, allRoutesEnabled?: boolean) => Promise<void>;
-  loadAllShops: (userId: string) => Promise<void>;
+  loadTodayShops: (userId: string, allRoutesEnabled?: boolean, companyId?: string) => Promise<void>;
+  loadAllShops: (userId: string, companyId?: string) => Promise<void>;
   addToOfflineQueue: (recovery: OfflineRecovery) => Promise<void>;
   syncOfflineQueue: () => Promise<SyncResult>;
-  triggerFullSync: (userId: string, allRoutesEnabled?: boolean) => Promise<boolean>;
+  triggerFullSync: (userId: string, allRoutesEnabled?: boolean, companyId?: string) => Promise<boolean>;
   setIsOnline: (v: boolean) => void;
 }
 
@@ -62,14 +62,21 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   const fetchShopsForUser = useCallback(async (
     userId: string,
     allRoutesEnabled: boolean,
+    companyId?: string,
   ): Promise<Shop[]> => {
+    const params: { orderbookerId: string; balanceOnly: boolean; routeDay?: string; companyId?: string } = {
+      orderbookerId: userId,
+      balanceOnly: false,
+    };
+    if (companyId) params.companyId = companyId;
     if (allRoutesEnabled) {
       // All routes mode: fetch ALL shops for this orderbooker
-      return await ApiService.getShops({ orderbookerId: userId, balanceOnly: false });
+      return await ApiService.getShops(params);
     } else {
       // Route-wise mode: fetch only today's route shops
       const todayDay = getTodayDayName();
-      return await ApiService.getShops({ orderbookerId: userId, routeDay: todayDay, balanceOnly: false });
+      params.routeDay = todayDay;
+      return await ApiService.getShops(params);
     }
   }, []);
 
@@ -253,13 +260,13 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   // ─── Load today's shops ───────────────────────────────────────────────────
   // Route-wise by default (e.g., Sunday = Sunday shops only).
   // When allRoutesEnabled is true, fetch ALL shops grouped by route day.
-  const loadTodayShops = useCallback(async (userId: string, allRoutesEnabled?: boolean) => {
+  const loadTodayShops = useCallback(async (userId: string, allRoutesEnabled?: boolean, companyId?: string) => {
     currentUserIdRef.current = userId;
     const isEnabled = allRoutesEnabled ?? false;
     allRoutesEnabledRef.current = isEnabled;
     setIsLoadingToday(true);
     try {
-      const shops = await fetchShopsForUser(userId, isEnabled);
+      const shops = await fetchShopsForUser(userId, isEnabled, companyId);
       setTodayShops(shops);
       await StorageService.saveShops(shops);
       setLastSyncTime(new Date().toISOString());
@@ -280,10 +287,15 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   }, [refreshOfflineQueue, fetchShopsForUser, filterActiveShops]);
 
   // ─── Load all shops ───────────────────────────────────────────────────────
-  const loadAllShops = useCallback(async (userId: string) => {
+  const loadAllShops = useCallback(async (userId: string, companyId?: string) => {
     setIsLoadingAll(true);
     try {
-      const shops = await ApiService.getShops({ orderbookerId: userId, balanceOnly: false });
+      const params: { orderbookerId: string; balanceOnly: boolean; companyId?: string } = {
+        orderbookerId: userId,
+        balanceOnly: false,
+      };
+      if (companyId) params.companyId = companyId;
+      const shops = await ApiService.getShops(params);
       setAllShops(shops);
       await StorageService.saveShops(shops);
     } catch {
@@ -346,7 +358,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   }, [refreshOfflineQueue, fetchShopsForUser]);
 
   // ─── Full sync (initial download on login) ────────────────────────────────
-  const triggerFullSync = useCallback(async (userId: string, allRoutesEnabled?: boolean): Promise<boolean> => {
+  const triggerFullSync = useCallback(async (userId: string, allRoutesEnabled?: boolean, companyId?: string): Promise<boolean> => {
     currentUserIdRef.current = userId;
     const isEnabled = allRoutesEnabled ?? false;
     allRoutesEnabledRef.current = isEnabled;

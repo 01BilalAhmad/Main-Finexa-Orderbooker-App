@@ -41,6 +41,7 @@ import { StorageService, PendingNotification, OfflineRecovery } from '@/services
 import { RecoveryReminder } from '@/components/ui/RecoveryReminder';
 import { AppTour } from '@/components/ui/AppTour';
 import { PhoneInputModal } from '@/components/ui/PhoneInputModal';
+import { CompanySelector } from '@/components/ui/CompanySelector';
 
 type ChartView = 'trend' | 'analysis' | 'none';
 
@@ -51,7 +52,7 @@ type SectionItem =
 
 export default function TodayRouteScreen() {
   const insets = useSafeAreaInsets();
-  const { user, distributorPhone } = useAuth();
+  const { user, distributorPhone, companies, selectedCompanyId, setSelectedCompanyId } = useAuth();
   const {
     todayShops,
     allShops,
@@ -166,12 +167,12 @@ export default function TodayRouteScreen() {
 
   useEffect(() => {
     if (user) {
-      loadTodayShops(user.id, allRoutesEnabled);
-      loadAllShops(user.id);
+      loadTodayShops(user.id, allRoutesEnabled, selectedCompanyId || undefined);
+      loadAllShops(user.id, selectedCompanyId || undefined);
       loadTodayStats();
       loadPendingNotifications();
     }
-  }, [user, allRoutesEnabled]);
+  }, [user, allRoutesEnabled, selectedCompanyId]);
 
   // ── Pending Reminder: Show alert when app comes to foreground with pending receipts ──
   useEffect(() => {
@@ -242,11 +243,11 @@ export default function TodayRouteScreen() {
 
   const handleRefresh = useCallback(async () => {
     if (user) {
-      await loadTodayShops(user.id, allRoutesEnabled);
-      await loadAllShops(user.id);
+      await loadTodayShops(user.id, allRoutesEnabled, selectedCompanyId || undefined);
+      await loadAllShops(user.id, selectedCompanyId || undefined);
       await loadTodayStats();
     }
-  }, [user, allRoutesEnabled]);
+  }, [user, allRoutesEnabled, selectedCompanyId]);
 
   const handleSync = async () => {
     if (offlineQueueCount === 0) return;
@@ -278,7 +279,7 @@ export default function TodayRouteScreen() {
     const shopName = recoveryShop.name;
     const shopId = recoveryShop.id;
     const shopPhone = recoveryShop.phone;
-    const openingBalance = recoveryShop.balance;
+    const openingBalance = getShopDisplayBalance(recoveryShop, selectedCompanyId || user?.companyId).balance;
     // Generate idempotency key to prevent duplicate submissions
     const idempotencyKey = `${shopId}_${user.id}_${payload.amount}_${Date.now()}`;
     try {
@@ -293,7 +294,7 @@ export default function TodayRouteScreen() {
           gpsLng: payload.gpsLng,
           gpsAddress: payload.gpsAddress,
           outOfRange: payload.outOfRange,
-          companyId: user.companyId || undefined,
+          companyId: selectedCompanyId || user.companyId || undefined,
           idempotencyKey,
         });
         setVisitedShopIds((prev) => new Set([...prev, shopId]));
@@ -337,7 +338,7 @@ export default function TodayRouteScreen() {
             openingBalance,
             recoveryAmount: payload.amount,
             remainingBalance,
-            companyName: user.companyName || undefined,
+            companyName: selectedCompanyName || undefined,
             orderbookerName: user.name || undefined,
             distributorPhone: distributorPhone || undefined,
             createdAt: new Date().toISOString(),
@@ -357,7 +358,7 @@ export default function TodayRouteScreen() {
             openingBalance,
             recoveryAmount: payload.amount,
             remainingBalance,
-            companyName: user.companyName || undefined,
+            companyName: selectedCompanyName || undefined,
             orderbookerName: user.name || undefined,
             distributorPhone: distributorPhone || undefined,
           });
@@ -378,7 +379,7 @@ export default function TodayRouteScreen() {
                 openingBalance,
                 recoveryAmount: payload.amount,
                 remainingBalance,
-                companyName: user.companyName || undefined,
+                companyName: selectedCompanyName || undefined,
                 orderbookerName: user.name || undefined,
                 distributorPhone: distributorPhone || undefined,
               };
@@ -437,7 +438,7 @@ export default function TodayRouteScreen() {
             openingBalance,
             recoveryAmount: payload.amount,
             remainingBalance,
-            companyName: user.companyName || undefined,
+            companyName: selectedCompanyName || undefined,
             orderbookerName: user.name || undefined,
             distributorPhone: distributorPhone || undefined,
             createdAt: new Date().toISOString(),
@@ -456,7 +457,7 @@ export default function TodayRouteScreen() {
             openingBalance,
             recoveryAmount: payload.amount,
             remainingBalance,
-            companyName: user.companyName || undefined,
+            companyName: selectedCompanyName || undefined,
             orderbookerName: user.name || undefined,
             distributorPhone: distributorPhone || undefined,
           });
@@ -475,7 +476,7 @@ export default function TodayRouteScreen() {
                 openingBalance,
                 recoveryAmount: payload.amount,
                 remainingBalance,
-                companyName: user.companyName || undefined,
+                companyName: selectedCompanyName || undefined,
                 orderbookerName: user.name || undefined,
                 distributorPhone: distributorPhone || undefined,
               };
@@ -603,7 +604,7 @@ export default function TodayRouteScreen() {
     if (!phoneInputShop || !user) return;
     const shopName = phoneInputShop.name;
     const shopId = phoneInputShop.id;
-    const openingBalance = phoneInputShop.balance;
+    const openingBalance = getShopDisplayBalance(phoneInputShop, selectedCompanyId || user?.companyId).balance;
 
     // Find the last recovery amount for this shop
     const remainingBalance = openingBalance - (lastRecoveryInfo?.shopId === shopId ? lastRecoveryInfo.amount : 0);
@@ -622,7 +623,7 @@ export default function TodayRouteScreen() {
       openingBalance,
       recoveryAmount,
       remainingBalance,
-      companyName: user.companyName || undefined,
+      companyName: selectedCompanyName || undefined,
       orderbookerName: user.name || undefined,
       distributorPhone: distributorPhone || undefined,
       createdAt: new Date().toISOString(),
@@ -643,11 +644,11 @@ export default function TodayRouteScreen() {
       openingBalance,
       recoveryAmount,
       remainingBalance,
-      companyName: user.companyName || undefined,
+      companyName: selectedCompanyName || undefined,
       orderbookerName: user.name || undefined,
       distributorPhone: distributorPhone || undefined,
     });
-  }, [phoneInputShop, user, lastRecoveryInfo, distributorPhone]);
+  }, [phoneInputShop, user, lastRecoveryInfo, distributorPhone, selectedCompanyId]);
 
   // Feature 13: Handle reminder shop press
   const handleReminderShopPress = useCallback((shopId: string) => {
@@ -735,7 +736,7 @@ export default function TodayRouteScreen() {
   }, [filteredShops, allRoutesEnabled, todayDay]);
 
   // ── Stats ────────────────────────────────────────────────────────────────
-  const totalOutstanding = todayShops.reduce((sum, s) => sum + getShopDisplayBalance(s, user?.companyId).balance, 0);
+  const totalOutstanding = todayShops.reduce((sum, s) => sum + getShopDisplayBalance(s, selectedCompanyId || user?.companyId).balance, 0);
   const visitedCount = visitedShopIds.size;
   const progressPct = todayShops.length > 0 ? (visitedCount / todayShops.length) * 100 : 0;
 
@@ -746,6 +747,11 @@ export default function TodayRouteScreen() {
   // ── Hero badge label ─────────────────────────────────────────────────────
   const routeBadgeLabel = allRoutesEnabled ? 'All Routes' : capitalize(todayDay);
   const routeBadgeIcon: React.ComponentProps<typeof MaterialIcons>['name'] = allRoutesEnabled ? 'map' : 'route';
+
+  // ── Selected company name for notifications ────────────────────────────────
+  const selectedCompanyName = selectedCompanyId
+    ? companies.find((c) => c.companyId === selectedCompanyId)?.companyName
+    : user?.companyName;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -803,6 +809,14 @@ export default function TodayRouteScreen() {
                     </Text>
                     <Text style={styles.heroDate}>{getTodayLabel()}</Text>
                   </View>
+                  {/* Company Selector */}
+                  {companies.length > 0 ? (
+                    <CompanySelector
+                      companies={companies}
+                      selectedCompanyId={selectedCompanyId}
+                      onSelectCompany={setSelectedCompanyId}
+                    />
+                  ) : null}
                 </View>
 
                 {/* Visit Streak Counter */}
@@ -1025,7 +1039,7 @@ export default function TodayRouteScreen() {
                   onCollect={() => handleOpenRecovery(item.shop)}
                   onPress={() => setDetailShop(item.shop)}
                   onGpsVisit={() => setGpsVisitShop(item.shop)}
-                  companyId={user?.companyId}
+                  companyId={selectedCompanyId || user?.companyId}
                 />
               </View>
             );
@@ -1065,6 +1079,14 @@ export default function TodayRouteScreen() {
                     </Text>
                     <Text style={styles.heroDate}>{getTodayLabel()}</Text>
                   </View>
+                  {/* Company Selector */}
+                  {companies.length > 0 ? (
+                    <CompanySelector
+                      companies={companies}
+                      selectedCompanyId={selectedCompanyId}
+                      onSelectCompany={setSelectedCompanyId}
+                    />
+                  ) : null}
                 </View>
 
                 {/* Visit Streak Counter */}
@@ -1260,7 +1282,7 @@ export default function TodayRouteScreen() {
               onCollect={() => handleOpenRecovery(item)}
               onPress={() => setDetailShop(item)}
               onGpsVisit={() => setGpsVisitShop(item)}
-              companyId={user?.companyId}
+              companyId={selectedCompanyId || user?.companyId}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -1270,7 +1292,7 @@ export default function TodayRouteScreen() {
       <RecoveryBottomSheet
         visible={recoveryShop !== null}
         shop={recoveryShop}
-        companyId={user?.companyId}
+        companyId={selectedCompanyId || user?.companyId}
         onClose={() => setRecoveryShop(null)}
         onSubmit={handleSubmitRecovery}
         isSubmitting={isSubmitting}
@@ -1286,7 +1308,7 @@ export default function TodayRouteScreen() {
       <ShopDetailModal
         visible={detailShop !== null}
         shop={detailShop}
-        companyId={user?.companyId}
+        companyId={selectedCompanyId || user?.companyId}
         onClose={() => setDetailShop(null)}
         onCollect={() => {
           if (detailShop && recoverySubmittedShopIds.has(detailShop.id)) {

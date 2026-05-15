@@ -117,7 +117,7 @@ const kpiStyles = StyleSheet.create({
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, logout, updatePhone } = useAuth();
+  const { user, logout, updatePhone, companies, selectedCompanyId } = useAuth();
   const { allShops } = useShops();
   const { setNeedsPinSetup, lock } = useLock();
 
@@ -344,10 +344,17 @@ export default function ProfileScreen() {
             label="Account Status"
             value={user.status === 'active' ? 'Active' : user.status}
           />
-          {user.companyName ? (
+          {user.companyName || selectedCompanyId ? (
             <>
               <View style={styles.divider} />
-              <InfoRow icon="business" label="Company" value={user.companyName} />
+              <InfoRow
+                icon="business"
+                label="Company"
+                value={selectedCompanyId
+                  ? companies.find((c) => c.companyId === selectedCompanyId)?.companyName || user.companyName || 'N/A'
+                  : user.companyName || 'N/A'
+                }
+              />
             </>
           ) : null}
         </View>

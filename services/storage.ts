@@ -22,6 +22,7 @@ const KEYS = {
   RECOVERY_SUBMITTED_SHOPS: 'af_recovery_submitted_shops',
   OFFLINE_PHONE_UPDATES: 'af_offline_phone_updates',
   DISTRIBUTOR_PHONE: 'af_distributor_phone', // saved locally for offline receipt use
+  SELECTED_COMPANY_ID: 'af_selected_company_id', // persisted selected company
 };
 
 export interface PendingNotification {
@@ -579,6 +580,19 @@ export const StorageService = {
 
   getDistributorPhone: async (): Promise<string | null> => {
     return AsyncStorage.getItem(KEYS.DISTRIBUTOR_PHONE);
+  },
+
+  // --- Selected Company ID (persists across app restarts) ---
+  saveSelectedCompanyId: async (companyId: string | null) => {
+    if (companyId) {
+      await AsyncStorage.setItem(KEYS.SELECTED_COMPANY_ID, companyId);
+    } else {
+      await AsyncStorage.removeItem(KEYS.SELECTED_COMPANY_ID);
+    }
+  },
+
+  getSelectedCompanyId: async (): Promise<string | null> => {
+    return AsyncStorage.getItem(KEYS.SELECTED_COMPANY_ID);
   },
 
   // --- Update phone in local shops cache (AsyncStorage) ---
