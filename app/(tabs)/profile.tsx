@@ -97,9 +97,12 @@ function KpiCard({
 const kpiStyles = StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.7)',
     ...Shadow.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   top: { marginBottom: 6 },
   iconWrap: {
@@ -479,7 +482,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(129,140,248,0.15)',
     top: -80,
     right: -60,
   },
@@ -488,7 +491,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(129,140,248,0.10)',
     bottom: -40,
     left: -30,
   },

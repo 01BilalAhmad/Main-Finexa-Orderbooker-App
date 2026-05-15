@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   companyItemSelected: {
-    backgroundColor: Colors.blueLight,
+    backgroundColor: Colors.primaryLight,
   },
   companyItemPressed: {
     opacity: 0.7,
