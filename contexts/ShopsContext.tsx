@@ -276,7 +276,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       // If route-wise mode, filter cached shops by today's route
       if (!isEnabled) {
         const todayDay = getTodayDayName();
-        setTodayShops(activeCached.filter((s) => s.routeDays.includes(todayDay)));
+        setTodayShops(activeCached.filter((s) => s.routeDays && s.routeDays.includes(todayDay)));
       } else {
         setTodayShops(activeCached);
       }
@@ -371,7 +371,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
         setTodayShops(activeCached);
       } else {
         const todayDay = getTodayDayName();
-        setTodayShops(activeCached.filter((s) => s.routeDays.includes(todayDay)));
+        setTodayShops(activeCached.filter((s) => s.routeDays && s.routeDays.includes(todayDay)));
       }
       setAllShops(activeCached);
       const t = await StorageService.getLastSync();

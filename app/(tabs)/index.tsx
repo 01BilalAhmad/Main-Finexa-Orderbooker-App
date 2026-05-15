@@ -708,7 +708,7 @@ export default function TodayRouteScreen() {
     for (const shop of filteredShops) {
       if (assignedShops.has(shop.id)) continue; // skip if already placed
 
-      const days = shop.routeDays.length > 0 ? shop.routeDays : ['other'];
+      const days = (shop.routeDays && shop.routeDays.length > 0) ? shop.routeDays : ['other'];
       // Prefer today's route if the shop has it, otherwise use first day
       const primaryDay = days.includes(todayDay) ? todayDay : days[0];
 
