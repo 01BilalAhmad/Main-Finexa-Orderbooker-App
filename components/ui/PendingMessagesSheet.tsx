@@ -15,6 +15,7 @@ import {
   AppStateStatus,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { captureRef } from '@/utils/captureRef';
 import * as Haptics from 'expo-haptics';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
@@ -424,8 +425,13 @@ export function PendingMessagesSheet({
             <View style={styles.handle} />
           </View>
 
-          {/* Header */}
-          <View style={styles.sheetHeader}>
+          {/* Gradient Header */}
+          <LinearGradient
+            colors={['#4F46E5', '#6366F1', '#818CF8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.sheetHeader}
+          >
             <View style={styles.sheetHeaderLeft}>
               <View style={styles.sheetIconWrap}>
                 <MaterialIcons name="pending-actions" size={22} color="#FFFFFF" />
@@ -440,7 +446,7 @@ export function PendingMessagesSheet({
             <View style={styles.sheetBadge}>
               <Text style={styles.sheetBadgeText}>{pendingList.length}</Text>
             </View>
-          </View>
+          </LinearGradient>
 
           {/* Mandatory note */}
           <View style={styles.noteCard}>
@@ -576,7 +582,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   sheetHeaderLeft: {
     flexDirection: 'row',
@@ -587,30 +594,32 @@ const styles = StyleSheet.create({
   sheetIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.danger,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadow.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   sheetTitle: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   sheetSubtitle: {
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 1,
   },
   sheetBadge: {
-    width: 28,
+    minWidth: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.danger,
+    backgroundColor: 'rgba(239,68,68,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: Spacing.sm,
+    paddingHorizontal: 8,
   },
   sheetBadgeText: {
     fontSize: FontSize.sm,

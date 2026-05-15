@@ -16,6 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { BarChart } from 'react-native-chart-kit';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
 import { Shop, Transaction, ApiService } from '@/services/api';
@@ -277,8 +278,15 @@ export const ShopDetailModal = memo(function ShopDetailModal({
           {/* Handle */}
           <View style={styles.handle} />
 
-          {/* Header */}
-          <View style={styles.header}>
+          {/* Gradient Header */}
+          <LinearGradient
+            colors={['#4F46E5', '#6366F1', '#818CF8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            <View style={styles.headerBubble1} />
+            <View style={styles.headerBubble2} />
             <View style={styles.shopIconWrap}>
               <Text style={styles.shopIcon}>{shop.name.charAt(0).toUpperCase()}</Text>
             </View>
@@ -287,9 +295,9 @@ export const ShopDetailModal = memo(function ShopDetailModal({
               <Text style={styles.owner}>{currentOwnerName || shop.ownerName}</Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-              <MaterialIcons name="close" size={22} color={Colors.textSecondary} />
+              <MaterialIcons name="close" size={22} color="rgba(255,255,255,0.8)" />
             </Pressable>
-          </View>
+          </LinearGradient>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
             {/* Info chips */}
@@ -716,23 +724,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
     gap: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  headerBubble1: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    top: -50,
+    right: -30,
+  },
+  headerBubble2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    bottom: -20,
+    left: -15,
   },
   shopIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: Colors.primaryLight,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   shopIcon: {
     fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    color: '#FFFFFF',
   },
   headerInfo: {
     flex: 1,
@@ -740,18 +769,18 @@ const styles = StyleSheet.create({
   shopName: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   owner: {
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
+    color: 'rgba(255,255,255,0.75)',
     marginTop: 1,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1017,9 +1046,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.md,
+    backgroundColor: '#4F46E5',
+    borderRadius: 30,
     paddingVertical: 16,
+    ...Shadow.md,
   },
   collectBtnPressed: { opacity: 0.85 },
   footerButtonsRow: {

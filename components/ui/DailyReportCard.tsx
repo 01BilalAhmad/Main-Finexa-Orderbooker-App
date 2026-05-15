@@ -33,6 +33,7 @@ interface DailyReportProps {
   shopsVisited: number;
   totalShops: number;
   totalRecovery: number;
+  totalOutstanding?: number;
   smsSent: number;
   whatsappSent: number;
   pendingMessages: number;
@@ -47,6 +48,7 @@ export function DailyReportCard({
   shopsVisited,
   totalShops,
   totalRecovery,
+  totalOutstanding = 0,
   smsSent,
   whatsappSent,
   pendingMessages,
@@ -60,30 +62,33 @@ export function DailyReportCard({
   const todayLabel = getTodayLabel();
   const visitPct = totalShops > 0 ? Math.round((shopsVisited / totalShops) * 100) : 0;
 
+  // Recovery progress: how much of total outstanding was recovered today
+  const recoveryPct = totalOutstanding > 0 ? Math.min(Math.round((totalRecovery / totalOutstanding) * 100), 100) : 0;
+
   const buildTextMessage = () => {
     const lines = [
-      `📋 *Finexa Recovery App*`,
-      `📊 Daily Recovery Report`,
+      `*Finexa Recovery App*`,
+      `Daily Recovery Report`,
       ``,
-      `📅 ${todayLabel}`,
-      `👤 ${orderbookerName}`,
+      `${todayLabel}`,
+      `${orderbookerName}`,
       ``,
-      `🏪 Shops: ${shopsVisited}/${totalShops} visited (${visitPct}%)`,
-      `💰 Recovery: ${formatPKR(totalRecovery)}`,
+      `Shops: ${shopsVisited}/${totalShops} visited (${visitPct}%)`,
+      `Recovery: ${formatPKR(totalRecovery)}`,
     ];
     // Add company-wise breakdown in text message
     if (companyBreakdown.length > 0) {
       lines.push('');
-      lines.push('📊 *Company-wise Recovery:*');
+      lines.push('*Company-wise Recovery:*');
       for (const cb of companyBreakdown) {
-        lines.push(`  • ${cb.companyName}: ${formatPKR(cb.totalRecovery)} (${cb.shops} shops)`);
+        lines.push(`  - ${cb.companyName}: ${formatPKR(cb.totalRecovery)} (${cb.shops} shops)`);
       }
     }
     lines.push('');
-    lines.push(`📩 SMS Shops: ${smsSent} | WA Shops: ${whatsappSent}`);
-    if (pendingMessages > 0) lines.push(`⚠️ ${pendingMessages} pending`);
+    lines.push(`SMS Shops: ${smsSent} | WA Shops: ${whatsappSent}`);
+    if (pendingMessages > 0) lines.push(`${pendingMessages} pending`);
     lines.push('');
-    lines.push('_Powered by Finexa Recovery App_');
+    lines.push('Powered by Finexa Recovery App');
     return lines.filter((l): l is string => true).join('\n');
   };
 
@@ -209,7 +214,36 @@ export function DailyReportCard({
               {/* Big Divider */}
               <View style={styles.bigDivider} />
 
-              {/* Main Stat - Visit Progress — BIGGER */}
+              {/* ── RECOVERY PROGRESS BAR with Amount ── */}
+              <View style={styles.progressSection}>
+                <View style={styles.progressHeader}>
+                  <View style={styles.progressHeaderLeft}>
+                    <View style={styles.progressIconWrap}>
+                      <MaterialIcons name="trending-up" size={18} color="#A7F3D0" />
+                    </View>
+                    <View>
+                      <Text style={styles.progressLabel}>RECOVERY PROGRESS</Text>
+                    </View>
+                  </View>
+                  <View style={styles.progressPctBadge}>
+                    <Text style={styles.progressPctText}>{recoveryPct}%</Text>
+                  </View>
+                </View>
+                {/* Progress bar track */}
+                <View style={styles.progressBarTrack}>
+                  <View style={[styles.progressBarFill, { width: `${recoveryPct}%` }]} />
+                </View>
+                <View style={styles.progressAmounts}>
+                  <Text style={styles.progressRecovered}>
+                    Recovered: <Text style={styles.progressRecoveredVal}>{formatPKR(totalRecovery)}</Text>
+                  </Text>
+                  <Text style={styles.progressOutstanding}>
+                    Outstanding: <Text style={styles.progressOutstandingVal}>{formatPKR(totalOutstanding)}</Text>
+                  </Text>
+                </View>
+              </View>
+
+              {/* Main Stat - Visit Progress */}
               <View style={styles.mainStatCard}>
                 <View style={styles.mainStatLeft}>
                   <Text style={styles.mainStatValue}>{shopsVisited}/{totalShops}</Text>
@@ -222,7 +256,7 @@ export function DailyReportCard({
                 </View>
               </View>
 
-              {/* Recovery Amount — MUCH BIGGER */}
+              {/* Recovery Amount — Highlight */}
               <View style={styles.recoveryHighlight}>
                 <View style={styles.recoveryIconWrap}>
                   <MaterialIcons name="payments" size={28} color="#FDE68A" />
@@ -230,13 +264,10 @@ export function DailyReportCard({
                 <View style={styles.recoveryTextWrap}>
                   <Text style={styles.recoveryLabel}>TOTAL RECOVERY</Text>
                   <Text style={styles.recoveryAmount}>{formatPKR(totalRecovery)}</Text>
-                  {selectedCompanyName ? (
-                    <Text style={styles.recoveryCompanyLabel}>{selectedCompanyName}</Text>
-                  ) : null}
                 </View>
               </View>
 
-              {/* Company-wise Recovery Breakdown */}
+              {/* ── Company-wise Recovery Breakdown with Progress Bars ── */}
               {companyBreakdown.length > 0 ? (
                 <View style={styles.breakdownSection}>
                   <View style={styles.breakdownHeader}>
@@ -245,25 +276,34 @@ export function DailyReportCard({
                   </View>
                   {companyBreakdown.map((cb, idx) => {
                     const pct = totalRecovery > 0 ? Math.round((cb.totalRecovery / totalRecovery) * 100) : 0;
+                    const barWidth = totalRecovery > 0 ? Math.round((cb.totalRecovery / totalRecovery) * 100) : 0;
                     return (
-                      <View key={cb.companyId} style={[styles.breakdownRow, idx === companyBreakdown.length - 1 && styles.breakdownRowLast]}>
-                        <View style={styles.breakdownLeft}>
-                          <View style={styles.breakdownDot} />
-                          <Text style={styles.breakdownName} numberOfLines={1}>{cb.companyName}</Text>
-                        </View>
-                        <View style={styles.breakdownRight}>
-                          <Text style={styles.breakdownAmount}>{formatPKR(cb.totalRecovery)}</Text>
-                          <View style={styles.breakdownPill}>
-                            <Text style={styles.breakdownPillText}>{pct}%</Text>
+                      <View key={cb.companyId} style={[styles.breakdownCard, idx === companyBreakdown.length - 1 && styles.breakdownCardLast]}>
+                        {/* Company name row */}
+                        <View style={styles.breakdownCardTop}>
+                          <View style={styles.breakdownLeft}>
+                            <View style={[styles.breakdownDot, { backgroundColor: idx === 0 ? '#93C5FD' : '#A7F3D0' }]} />
+                            <Text style={styles.breakdownName} numberOfLines={1}>{cb.companyName}</Text>
+                          </View>
+                          <View style={styles.breakdownRight}>
+                            <Text style={styles.breakdownAmount}>{formatPKR(cb.totalRecovery)}</Text>
+                            <View style={styles.breakdownPill}>
+                              <Text style={styles.breakdownPillText}>{pct}%</Text>
+                            </View>
                           </View>
                         </View>
+                        {/* Per-company progress bar */}
+                        <View style={styles.breakdownBarTrack}>
+                          <View style={[styles.breakdownBarFill, { width: `${Math.min(barWidth, 100)}%`, backgroundColor: idx === 0 ? '#93C5FD' : '#A7F3D0' }]} />
+                        </View>
+                        <Text style={styles.breakdownShopsText}>{cb.shops} shops</Text>
                       </View>
                     );
                   })}
                 </View>
               ) : null}
 
-              {/* Stats Row — BIGGER CARDS */}
+              {/* Stats Row — Cards */}
               <View style={styles.statsRow}>
                 <View style={styles.statBlock}>
                   <View style={[styles.statBlockIcon, { backgroundColor: 'rgba(96,165,250,0.25)' }]}>
@@ -493,7 +533,95 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     zIndex: 1,
   },
-  // Main Stat - Visited — BIGGER
+
+  // ===== RECOVERY PROGRESS BAR =====
+  progressSection: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: Radius.lg,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    zIndex: 1,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  progressHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(167,243,208,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1,
+  },
+  progressPctBadge: {
+    backgroundColor: 'rgba(167,243,208,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(167,243,208,0.3)',
+    borderRadius: Radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  progressPctText: {
+    fontSize: 13,
+    fontWeight: FontWeight.bold,
+    color: '#A7F3D0',
+  },
+  progressBarTrack: {
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#A7F3D0',
+  },
+  progressAmounts: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressRecovered: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: FontWeight.medium,
+  },
+  progressRecoveredVal: {
+    color: '#A7F3D0',
+    fontWeight: FontWeight.bold,
+    fontSize: 12,
+  },
+  progressOutstanding: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: FontWeight.medium,
+  },
+  progressOutstandingVal: {
+    color: '#FDE68A',
+    fontWeight: FontWeight.bold,
+    fontSize: 12,
+  },
+
+  // Main Stat - Visited
   mainStatCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -539,7 +667,7 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: '#A7F3D0',
   },
-  // Recovery Highlight — MUCH BIGGER
+  // Recovery Highlight
   recoveryHighlight: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -576,13 +704,8 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: '#FDE68A',
   },
-  recoveryCompanyLabel: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: FontWeight.medium,
-    marginTop: 2,
-  },
-  // Company Breakdown
+
+  // ===== Company Breakdown — Cards with Progress Bars =====
   breakdownSection: {
     backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: Radius.lg,
@@ -604,17 +727,20 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.5,
   },
-  breakdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  breakdownCard: {
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
-  breakdownRowLast: {
+  breakdownCardLast: {
     borderBottomWidth: 0,
     paddingBottom: 0,
+  },
+  breakdownCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
   },
   breakdownLeft: {
     flexDirection: 'row',
@@ -623,9 +749,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   breakdownDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#93C5FD',
   },
   breakdownName: {
@@ -655,7 +781,25 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: '#FDE68A',
   },
-  // Stats Row — BIGGER VERTICAL CARDS
+  // Per-company progress bar
+  breakdownBarTrack: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 3,
+  },
+  breakdownBarFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  breakdownShopsText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: FontWeight.medium,
+  },
+
+  // Stats Row
   statsRow: {
     flexDirection: 'row',
     gap: 8,

@@ -1464,6 +1464,7 @@ export default function TodayRouteScreen() {
         shopsVisited={visitedCount}
         totalShops={todayShops.length}
         totalRecovery={todayRecovery}
+        totalOutstanding={totalOutstanding}
         smsSent={smsSentCount}
         whatsappSent={whatsappSentCount}
         pendingMessages={pendingNotifications.length}

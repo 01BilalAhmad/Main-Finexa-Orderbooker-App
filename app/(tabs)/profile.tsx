@@ -1,4 +1,6 @@
 // Powered by Finexa
+// Profile Screen — Modern redesign with gradient hero, glassmorphism cards,
+// improved KPI section, and consistent indigo theme throughout.
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -28,7 +30,8 @@ import { PerformanceRanking } from '@/components/ui/PerformanceRanking';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+// ── Info Row Component ──
+function InfoRow({ icon, label, value, valueColor }: { icon: string; label: string; value: string; valueColor?: string }) {
   return (
     <View style={infoRowStyles.row}>
       <View style={infoRowStyles.iconWrap}>
@@ -36,7 +39,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
       </View>
       <View style={{ flex: 1 }}>
         <Text style={infoRowStyles.label}>{label}</Text>
-        <Text style={infoRowStyles.value}>{value}</Text>
+        <Text style={[infoRowStyles.value, valueColor && { color: valueColor }]}>{value}</Text>
       </View>
     </View>
   );
@@ -49,12 +52,14 @@ const infoRowStyles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   iconWrap: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   label: {
     fontSize: FontSize.xs,
@@ -66,6 +71,7 @@ const infoRowStyles = StyleSheet.create({
   value: { fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.text },
 });
 
+// ── KPI Card Component ──
 function KpiCard({
   label,
   value,
@@ -82,13 +88,13 @@ function KpiCard({
   subtext?: string;
 }) {
   return (
-    <View style={[kpiStyles.card, { backgroundColor: bg }]}>
+    <View style={[kpiStyles.card, { borderLeftColor: color }]}>
       <View style={kpiStyles.top}>
-        <View style={[kpiStyles.iconWrap, { backgroundColor: color + '22' }]}>
+        <View style={[kpiStyles.iconWrap, { backgroundColor: color + '18' }]}>
           <MaterialIcons name={icon as any} size={20} color={color} />
         </View>
+        <Text style={[kpiStyles.value, { color }]}>{value}</Text>
       </View>
-      <Text style={[kpiStyles.value, { color }]}>{value}</Text>
       <Text style={kpiStyles.label}>{label}</Text>
       {subtext ? <Text style={kpiStyles.sub}>{subtext}</Text> : null}
     </View>
@@ -99,22 +105,102 @@ const kpiStyles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     padding: 14,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: Colors.surface,
     ...Shadow.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderLeftWidth: 3,
+    borderColor: Colors.borderLight,
   },
-  top: { marginBottom: 6 },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  value: { fontSize: FontSize.md, fontWeight: FontWeight.bold, marginBottom: 2 },
-  label: { fontSize: 10, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.4 },
+  value: { fontSize: FontSize.md, fontWeight: FontWeight.bold },
+  label: { fontSize: 10, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.4, fontWeight: FontWeight.semibold },
   sub: { fontSize: 10, color: Colors.textMuted, marginTop: 2 },
+});
+
+// ── Action Row Component ──
+function ActionRow({
+  icon,
+  iconColor,
+  iconBg,
+  title,
+  subtitle,
+  onPress,
+  showChevron = true,
+  danger = false,
+}: {
+  icon: string;
+  iconColor: string;
+  iconBg: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+  showChevron?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [actionStyles.card, pressed && { opacity: 0.9, transform: [{ scale: 0.995}] }]}
+      onPress={onPress}
+    >
+      <View style={[actionStyles.iconWrap, { backgroundColor: iconBg }]}>
+        <MaterialIcons name={icon as any} size={20} color={iconColor} />
+      </View>
+      <View style={actionStyles.textWrap}>
+        <Text style={[actionStyles.title, danger && { color: Colors.danger }]}>{title}</Text>
+        <Text style={actionStyles.subtitle}>{subtitle}</Text>
+      </View>
+      {showChevron ? (
+        <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
+      ) : null}
+    </Pressable>
+  );
+}
+const actionStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    ...Shadow.sm,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textWrap: {
+    flex: 1,
+  },
+  title: {
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+  },
+  subtitle: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 1,
+  },
 });
 
 export default function ProfileScreen() {
@@ -223,7 +309,7 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Hero profile card — 3-color gradient */}
+        {/* ── Hero profile card — 3-color gradient ── */}
         <LinearGradient
           colors={['#4F46E5', '#6366F1', '#818CF8']}
           start={{ x: 0, y: 0 }}
@@ -233,6 +319,7 @@ export default function ProfileScreen() {
           {/* Decorative circles */}
           <View style={styles.bubble1} />
           <View style={styles.bubble2} />
+          <View style={styles.bubble3} />
 
           {/* Rounded Square Avatar */}
           <View style={styles.avatarWrap}>
@@ -246,13 +333,27 @@ export default function ProfileScreen() {
             <MaterialIcons name="badge" size={12} color="rgba(255,255,255,0.9)" />
             <Text style={styles.roleText}>ORDER BOOKER</Text>
           </View>
+          {companies.length > 1 && selectedCompanyId ? (
+            <View style={styles.companyBadge}>
+              <MaterialIcons name="business" size={11} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.companyBadgeText}>
+                {companies.find((c) => c.companyId === selectedCompanyId)?.companyName || user.companyName || ''}
+              </Text>
+            </View>
+          ) : null}
         </LinearGradient>
 
-        {/* Glassmorphism Info card */}
+        {/* ── Account Details Card ── */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Account Details</Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderIcon}>
+              <MaterialIcons name="person-outline" size={16} color="#4F46E5" />
+            </View>
+            <Text style={styles.cardTitle}>Account Details</Text>
+          </View>
           <InfoRow icon="person" label="Username" value={`@${user.username}`} />
           <View style={styles.divider} />
+          {/* Phone with edit */}
           <View style={infoRowStyles.row}>
             <View style={infoRowStyles.iconWrap}>
               <MaterialIcons name="call" size={18} color="#4F46E5" />
@@ -345,6 +446,7 @@ export default function ProfileScreen() {
             icon="verified-user"
             label="Account Status"
             value={user.status === 'active' ? 'Active' : user.status}
+            valueColor={user.status === 'active' ? '#10B981' : undefined}
           />
           {user.companyName || selectedCompanyId ? (
             <>
@@ -361,8 +463,13 @@ export default function ProfileScreen() {
           ) : null}
         </View>
 
-        {/* Performance KPIs */}
-        <Text style={styles.sectionTitle}>Performance Overview</Text>
+        {/* ── Performance KPIs ── */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionHeaderIcon}>
+            <MaterialIcons name="analytics" size={16} color="#4F46E5" />
+          </View>
+          <Text style={styles.sectionTitle}>Performance Overview</Text>
+        </View>
         <View style={styles.kpiGrid}>
           <KpiCard
             label="Month Recovery"
@@ -384,8 +491,8 @@ export default function ProfileScreen() {
                 ? `Rs. ${(todayRecovery / 1000).toFixed(0)}K`
                 : formatPKR(todayRecovery)
             }
-            color={Colors.blue}
-            bg={Colors.blueLight}
+            color="#3B82F6"
+            bg="#EFF6FF"
             icon="today"
             subtext="Pending approval"
           />
@@ -401,25 +508,27 @@ export default function ProfileScreen() {
         {/* Recovery Comparison: This vs Last Week */}
         <RecoveryComparison userId={user.id} />
 
-        {/* Recovery Analysis Chart */}
+        {/* ── Recovery Analysis Toggle ── */}
         <Pressable
-          style={({ pressed }) => [styles.analysisToggle, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [styles.analysisToggle, pressed && { opacity: 0.9, transform: [{ scale: 0.995 }] }]}
           onPress={() => setShowAnalysis((v) => !v)}
         >
           <View style={styles.analysisToggleLeft}>
             <View style={styles.analysisToggleIcon}>
-              <MaterialIcons name="analytics" size={18} color="#4F46E5" />
+              <MaterialIcons name="analytics" size={20} color="#4F46E5" />
             </View>
             <View>
               <Text style={styles.analysisToggleTitle}>Recovery Analysis</Text>
               <Text style={styles.analysisToggleSub}>Credit vs recovery chart</Text>
             </View>
           </View>
-          <MaterialIcons
-            name={showAnalysis ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-            size={22}
-            color={Colors.textSecondary}
-          />
+          <View style={[styles.toggleIconWrap, showAnalysis && styles.toggleIconWrapActive]}>
+            <MaterialIcons
+              name={showAnalysis ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+              size={22}
+              color={showAnalysis ? '#4F46E5' : Colors.textSecondary}
+            />
+          </View>
         </Pressable>
 
         {showAnalysis ? <RecoveryAnalysisChart userId={user.id} /> : null}
@@ -427,26 +536,26 @@ export default function ProfileScreen() {
         {/* Performance Ranking */}
         <PerformanceRanking />
 
-        {/* Change PIN */}
-        <Pressable
-          style={({ pressed }) => [styles.changePinBtn, pressed && { opacity: 0.8 }]}
-          onPress={handleChangePin}
-        >
-          <View style={styles.changePinLeft}>
-            <View style={styles.changePinIcon}>
-              <MaterialIcons name="pin" size={18} color="#4F46E5" />
-            </View>
-            <View>
-              <Text style={styles.changePinTitle}>Change PIN</Text>
-              <Text style={styles.changePinSub}>Update your 4-digit security PIN</Text>
-            </View>
+        {/* ── Actions Section ── */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionHeaderIcon}>
+            <MaterialIcons name="settings" size={16} color="#4F46E5" />
           </View>
-          <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
-        </Pressable>
+          <Text style={styles.sectionTitle}>Settings</Text>
+        </View>
+
+        <ActionRow
+          icon="pin"
+          iconColor="#4F46E5"
+          iconBg="#EEF2FF"
+          title="Change PIN"
+          subtitle="Update your 4-digit security PIN"
+          onPress={handleChangePin}
+        />
 
         {/* Gradient Logout Button */}
         <Pressable
-          style={({ pressed }) => [styles.logoutBtnWrap, pressed && { opacity: 0.85 }]}
+          style={({ pressed }) => [styles.logoutBtnWrap, pressed && { opacity: 0.85, transform: [{ scale: 0.995 }] }]}
           onPress={handleLogout}
           disabled={loggingOut}
         >
@@ -474,12 +583,14 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background },
+  root: { flex: 1, backgroundColor: '#F8FAFC' },
   scroll: { paddingBottom: Spacing.md },
+  
+  // ── Hero ──
   profileHero: {
     alignItems: 'center',
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
+    paddingTop: Spacing.xl + 4,
+    paddingBottom: Spacing.xl + 8,
     paddingHorizontal: Spacing.md,
     overflow: 'hidden',
     borderBottomLeftRadius: 32,
@@ -487,27 +598,35 @@ const styles = StyleSheet.create({
   },
   bubble1: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: 'rgba(129,140,248,0.15)',
-    top: -80,
-    right: -60,
+    top: -90,
+    right: -70,
   },
   bubble2: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     backgroundColor: 'rgba(129,140,248,0.10)',
-    bottom: -40,
-    left: -30,
+    bottom: -50,
+    left: -40,
+  },
+  bubble3: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    top: 40,
+    left: 30,
   },
   avatarWrap: { position: 'relative', marginBottom: Spacing.md },
-  // Rounded Square Avatar
   avatarSquare: {
-    width: 88,
-    height: 88,
+    width: 92,
+    height: 92,
     borderRadius: 28,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
@@ -515,20 +634,20 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.35)',
   },
-  avatarText: { fontSize: FontSize.xxl, fontWeight: FontWeight.bold, color: '#FFFFFF' },
+  avatarText: { fontSize: FontSize.xxl + 2, fontWeight: FontWeight.bold, color: '#FFFFFF' },
   activeIndicator: {
     position: 'absolute',
     bottom: 4,
     right: 4,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#A7F3D0',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#4F46E5',
   },
   profileName: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.xl + 2,
     fontWeight: FontWeight.bold,
     color: '#FFFFFF',
     marginBottom: Spacing.sm,
@@ -545,14 +664,46 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
   },
   roleText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: '#FFFFFF', letterSpacing: 1 },
-  // Glassmorphism Info Card
+  companyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 3,
+    marginTop: Spacing.sm,
+  },
+  companyBadgeText: {
+    fontSize: FontSize.xs,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: FontWeight.semibold,
+  },
+
+  // ── Glassmorphism Info Card ──
   card: {
-    backgroundColor: 'rgba(255,255,255,0.97)',
+    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.md,
     margin: Spacing.md,
     marginTop: -Spacing.md,
     ...Shadow.lg,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  cardHeaderIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardTitle: {
     fontSize: FontSize.sm,
@@ -560,29 +711,47 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: Spacing.xs,
   },
-  divider: { height: 1, backgroundColor: Colors.borderLight },
-  sectionTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
+  divider: { height: 1, backgroundColor: Colors.borderLight, marginVertical: 2 },
+
+  // ── Section Header ──
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
+  sectionHeaderIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+  },
+
+  // ── KPI Grid ──
   kpiGrid: {
     flexDirection: 'row',
     gap: Spacing.sm,
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.md,
   },
+
+  // ── Analysis Toggle ──
   analysisToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    borderRadius: 16,
     padding: Spacing.md,
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
@@ -592,20 +761,34 @@ const styles = StyleSheet.create({
   },
   analysisToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   analysisToggleIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   analysisToggleTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.text },
   analysisToggleSub: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 1 },
-  // Gradient Logout Button
+  toggleIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleIconWrapActive: {
+    backgroundColor: '#EEF2FF',
+  },
+
+  // ── Logout Button ──
   logoutBtnWrap: {
     marginHorizontal: Spacing.md,
     marginTop: Spacing.sm,
-    borderRadius: 30,
+    borderRadius: 16,
     overflow: 'hidden',
     ...Shadow.md,
   },
@@ -617,40 +800,4 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   logoutBtnText: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.textInverse },
-  changePinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: Spacing.md,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.sm,
-    ...Shadow.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  changePinLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  changePinIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#EEF2FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  changePinTitle: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.text,
-  },
-  changePinSub: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: 1,
-  },
 });
