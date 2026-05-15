@@ -65,8 +65,7 @@
             "buildToolsVersion": "35.0.0"
           }
         }
-      ],
-      "./plugins/withAndroidBuildFix.js"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
