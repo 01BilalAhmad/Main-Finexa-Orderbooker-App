@@ -16,6 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { captureRef } from 'react-native-view-shot';
 import * as Linking from 'expo-linking';
 import * as MediaLibrary from 'expo-media-library';
@@ -305,18 +306,54 @@ export function RecoveryReceipt({
 
           {/* RECEIPT — White background card matching mockup */}
           <View ref={receiptRef} collapsable={false} style={styles.receipt}>
-            {/* ── 1. Dark Header: AL-FALAH TRADERS ── */}
-            <View style={styles.receiptHeader}>
-              <MaterialIcons name="account-balance" size={22} color="#FFFFFF" />
+            {/* ── 1. Gradient Header: AL-FALAH TRADERS ── */}
+            <LinearGradient
+              colors={['#4F46E5', '#6366F1', '#818CF8']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.receiptHeader}
+            >
+              {/* Decorative circles */}
+              <View style={{
+                position: 'absolute',
+                width: 160,
+                height: 160,
+                borderRadius: 80,
+                backgroundColor: 'rgba(255,255,255,0.06)',
+                top: -60,
+                right: -40,
+              }} />
+              <View style={{
+                position: 'absolute',
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                bottom: -20,
+                left: -20,
+              }} />
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 14,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.25)',
+              }}>
+                <MaterialIcons name="account-balance" size={24} color="#FFFFFF" />
+              </View>
               <Text style={styles.receiptBizName}>{companyName || 'AL-FALAH TRADERS'}</Text>
-              <Text style={styles.receiptBizSub}>Distributor &middot; Credit System</Text>
+              <Text style={styles.receiptBizSub}>Distributor · Credit System</Text>
               {distributorPhone ? (
                 <View style={styles.receiptBizContact}>
                   <MaterialIcons name="call" size={11} color="rgba(255,255,255,0.7)" />
                   <Text style={styles.receiptBizPhone}>{distributorPhone}</Text>
                 </View>
               ) : null}
-            </View>
+            </LinearGradient>
 
             {/* ── 2. Recovery Badge ── */}
             <View style={styles.badgeRow}>
@@ -519,13 +556,14 @@ const styles = StyleSheet.create({
     ...Shadow.xl,
   },
 
-  // Dark header — AL-FALAH TRADERS
+  // Gradient header — AL-FALAH TRADERS
   receiptHeader: {
-    backgroundColor: '#1E293B',
     paddingTop: 22,
     paddingBottom: 18,
     paddingHorizontal: 20,
     alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
   },
   receiptBizName: {
     fontSize: 18,
@@ -554,7 +592,7 @@ const styles = StyleSheet.create({
   // Recovery badge
   badgeRow: {
     alignItems: 'center',
-    marginTop: -12,
+    marginTop: -14,
     position: 'relative',
     zIndex: 2,
   },
@@ -565,9 +603,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0FDF4',
     borderWidth: 1.5,
     borderColor: '#BBF7D0',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 30,
+    ...Shadow.sm,
   },
   recoveryBadgeText: {
     fontSize: 11,
@@ -577,8 +616,8 @@ const styles = StyleSheet.create({
 
   // Receipt body
   receiptBody: {
-    paddingHorizontal: 18,
-    paddingTop: 14,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 16,
   },
 
@@ -644,26 +683,30 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // Amount section — large display
+  // Amount section — large display with gradient background
   receiptAmountSection: {
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
     borderStyle: 'dashed',
     alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
   },
   amountLabel: {
     fontSize: 10,
     color: '#94A3B8',
-    fontWeight: FontWeight.medium,
+    fontWeight: FontWeight.bold,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   amountValue: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 36,
+    fontWeight: '900',
     color: '#10B981',
     marginTop: 4,
+    letterSpacing: -1,
   },
 
   // Balance summary
@@ -710,17 +753,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingTop: 12,
+    paddingTop: 14,
+    paddingBottom: 4,
   },
   receiptThankText: {
     fontSize: 13,
     color: '#10B981',
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.bold,
   },
 
-  // Footer: Finexa
+  // Footer: Finexa — indigo gradient
   receiptFooter: {
-    backgroundColor: '#F8FAFC',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -732,9 +775,10 @@ const styles = StyleSheet.create({
   },
   footerLeft: {},
   footerBrand: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.bold,
     color: '#4F46E5',
+    letterSpacing: 0.5,
   },
   footerSub: {
     fontSize: 9,
@@ -774,7 +818,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginTop: Spacing.md,
   },
-  // WhatsApp button — green outline style
+  // WhatsApp button — green pill outline style
   waBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -783,16 +827,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0FDF4',
     borderWidth: 1.5,
     borderColor: '#BBF7D0',
-    borderRadius: 12,
+    borderRadius: 30,
     paddingVertical: 13,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
   },
   waBtnText: {
     fontSize: 13,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.bold,
     color: '#10B981',
   },
-  // Share/Save button — primary indigo
+  // Share/Save button — gradient indigo pill
   shareBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -800,7 +844,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: '#4F46E5',
-    borderRadius: 12,
+    borderRadius: 30,
     paddingVertical: 13,
     ...Shadow.md,
   },

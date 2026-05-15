@@ -872,40 +872,36 @@ export default function TodayRouteScreen() {
                   </Pressable>
                 </View>
 
-                {/* Progress Bar - All Routes */}
-                <View style={styles.progressSection}>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>
-                      {visitedCount} of {todayShops.length} shops visited (all routes)
-                    </Text>
-                    <Text style={styles.progressPct}>{Math.round(progressPct)}%</Text>
+                {/* Bento Stats Grid — All Routes */}
+                <View style={styles.bentoGrid}>
+                  <View style={styles.bentoCard}>
+                    <View style={styles.bentoIconWrap}>
+                      <MaterialIcons name="store" size={14} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.bentoValue}>{todayShops.length}</Text>
+                    <Text style={styles.bentoLabel}>Shops</Text>
                   </View>
-                  <View style={styles.progressTrack}>
-                    <View
-                      style={[styles.progressFill, { width: `${Math.min(progressPct, 100)}%` }]}
-                    />
+                  <View style={styles.bentoCard}>
+                    <View style={styles.bentoIconWrap}>
+                      <MaterialIcons name="account-balance-wallet" size={14} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.bentoValue}>{formatPKR(totalOutstanding)}</Text>
+                    <Text style={styles.bentoLabel}>Outstanding</Text>
                   </View>
-                </View>
-
-                {/* Stat Pills */}
-                <View style={styles.pillsRow}>
-                  <View style={styles.pill}>
-                    <Text style={styles.pillValue}>{todayShops.length}</Text>
-                    <Text style={styles.pillLabel}>Shops</Text>
-                  </View>
-                  <View style={styles.pillDivider} />
-                  <View style={styles.pill}>
-                    <Text style={styles.pillValue}>
-                      {formatPKR(totalOutstanding)}
-                    </Text>
-                    <Text style={styles.pillLabel}>Outstanding</Text>
-                  </View>
-                  <View style={styles.pillDivider} />
-                  <View style={styles.pill}>
-                    <Text style={[styles.pillValue, styles.pillGreen]}>
-                      {formatPKR(todayRecovery)}
-                    </Text>
-                    <Text style={styles.pillLabel}>Recovered</Text>
+                  <View style={styles.bentoCardWide}>
+                    <View style={styles.bentoWideTop}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.bentoRecoveryValue}>{formatPKR(todayRecovery)}</Text>
+                        <Text style={styles.bentoLabel}>Today's Recovery</Text>
+                      </View>
+                      <View style={styles.bentoRecoveryIcon}>
+                        <MaterialIcons name="trending-up" size={16} color="#34D399" />
+                      </View>
+                    </View>
+                    <View style={styles.bentoProgressTrack}>
+                      <View style={[styles.bentoProgressFill, { width: `${Math.min(progressPct, 100)}%` }]} />
+                    </View>
+                    <Text style={styles.bentoProgressText}>{visitedCount} of {todayShops.length} shops visited · {Math.round(progressPct)}%</Text>
                   </View>
                 </View>
 
@@ -1162,40 +1158,36 @@ export default function TodayRouteScreen() {
                   </Pressable>
                 </View>
 
-                {/* Progress Bar */}
-                <View style={styles.progressSection}>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>
-                      {visitedCount} of {todayShops.length} shops visited
-                    </Text>
-                    <Text style={styles.progressPct}>{Math.round(progressPct)}%</Text>
+                {/* Bento Stats Grid */}
+                <View style={styles.bentoGrid}>
+                  <View style={styles.bentoCard}>
+                    <View style={styles.bentoIconWrap}>
+                      <MaterialIcons name="store" size={14} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.bentoValue}>{todayShops.length}</Text>
+                    <Text style={styles.bentoLabel}>Shops</Text>
                   </View>
-                  <View style={styles.progressTrack}>
-                    <View
-                      style={[styles.progressFill, { width: `${Math.min(progressPct, 100)}%` }]}
-                    />
+                  <View style={styles.bentoCard}>
+                    <View style={styles.bentoIconWrap}>
+                      <MaterialIcons name="account-balance-wallet" size={14} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.bentoValue}>{formatPKR(totalOutstanding)}</Text>
+                    <Text style={styles.bentoLabel}>Outstanding</Text>
                   </View>
-                </View>
-
-                {/* Stat Pills */}
-                <View style={styles.pillsRow}>
-                  <View style={styles.pill}>
-                    <Text style={styles.pillValue}>{todayShops.length}</Text>
-                    <Text style={styles.pillLabel}>Shops</Text>
-                  </View>
-                  <View style={styles.pillDivider} />
-                  <View style={styles.pill}>
-                    <Text style={styles.pillValue}>
-                      {formatPKR(totalOutstanding)}
-                    </Text>
-                    <Text style={styles.pillLabel}>Outstanding</Text>
-                  </View>
-                  <View style={styles.pillDivider} />
-                  <View style={styles.pill}>
-                    <Text style={[styles.pillValue, styles.pillGreen]}>
-                      {formatPKR(todayRecovery)}
-                    </Text>
-                    <Text style={styles.pillLabel}>Recovered</Text>
+                  <View style={styles.bentoCardWide}>
+                    <View style={styles.bentoWideTop}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.bentoRecoveryValue}>{formatPKR(todayRecovery)}</Text>
+                        <Text style={styles.bentoLabel}>Today's Recovery</Text>
+                      </View>
+                      <View style={styles.bentoRecoveryIcon}>
+                        <MaterialIcons name="trending-up" size={16} color="#34D399" />
+                      </View>
+                    </View>
+                    <View style={styles.bentoProgressTrack}>
+                      <View style={[styles.bentoProgressFill, { width: `${Math.min(progressPct, 100)}%` }]} />
+                    </View>
+                    <Text style={styles.bentoProgressText}>{visitedCount} of {todayShops.length} shops visited · {Math.round(progressPct)}%</Text>
                   </View>
                 </View>
 
@@ -1666,38 +1658,90 @@ const styles = StyleSheet.create({
     backgroundColor: '#A5B4FC',
     borderRadius: Radius.full,
   },
-  // Pills — Bento-style glassmorphism
-  pillsRow: {
+  // Bento Grid — glassmorphism stat cards
+  bentoGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: Spacing.sm,
+  },
+  bentoCard: {
+    flex: 1,
+    minWidth: '45%',
     backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
+    borderRadius: 16,
+    padding: 12,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
   },
-  pill: {
-    flex: 1,
+  bentoCardWide: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  bentoIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'center',
+    marginBottom: 6,
   },
-  pillDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  pillValue: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+  bentoValue: {
+    fontSize: 20,
+    fontWeight: '800',
     color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
-  pillGreen: { color: '#A7F3D0' },
-  pillLabel: {
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.6)',
+  bentoLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.65)',
+    fontWeight: FontWeight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  bentoWideTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bentoRecoveryValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#34D399',
+    letterSpacing: -0.5,
+  },
+  bentoRecoveryIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(52,211,153,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bentoProgressTrack: {
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  bentoProgressFill: {
+    height: 8,
+    backgroundColor: '#A5B4FC',
+    borderRadius: 4,
+  },
+  bentoProgressText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: FontWeight.medium,
+    marginTop: 4,
   },
   // Chart Toggle
   chartToggleRow: {
