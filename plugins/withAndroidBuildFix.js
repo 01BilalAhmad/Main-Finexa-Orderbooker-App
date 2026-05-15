@@ -4,21 +4,22 @@ const { withAppBuildGradle } = require('@expo/config-plugins');
 
 /** Update the app-level build.gradle */
 function updateAppBuildGradle(buildGradle) {
-  // Add dependency resolution strategy to force compatible versions
-  const forceDepsBlock = `
+  // Add dependency resolution strategy inside android {} block
+  const resolutionBlock = `
     configurations.all {
-      resolutionStrategy {
-        force 'androidx.activity:activity:1.9.3'
-        force 'androidx.activity:activity-ktx:1.9.3'
-      }
+        resolutionStrategy {
+            force 'androidx.activity:activity:1.9.3'
+            force 'androidx.activity:activity-ktx:1.9.3'
+        }
     }
   `;
 
   // Only add if not already present
   if (!buildGradle.includes("force 'androidx.activity:activity:1.9.3'")) {
+    // Insert after 'android {' declaration
     buildGradle = buildGradle.replace(
-      /dependencies\s*\{/,
-      `${forceDepsBlock}\ndependencies {`
+      /android\s*\{/,
+      `android {\n${resolutionBlock}`
     );
   }
 
