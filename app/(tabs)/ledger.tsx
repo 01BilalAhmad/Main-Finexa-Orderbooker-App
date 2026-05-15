@@ -21,6 +21,7 @@ import { getShopDisplayBalance } from '@/components/ui/ShopCard';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
 import { formatPKR, formatDateTime } from '@/utils/format';
 import { downloadLedgerPdf } from '@/utils/generateLedgerPdf';
+import { CompanySelector } from '@/components/ui/CompanySelector';
 
 function SummaryPill({
   label,
@@ -175,7 +176,7 @@ const txnStyles = StyleSheet.create({
 
 export default function LedgerScreen() {
   const insets = useSafeAreaInsets();
-  const { user, distributorPhone, selectedCompanyId, companies } = useAuth();
+  const { user, distributorPhone, selectedCompanyId, companies, setSelectedCompanyId } = useAuth();
   const { allShops, isLoadingAll, loadAllShops } = useShops();
 
   const [showShopPicker, setShowShopPicker] = useState(false);
@@ -185,16 +186,17 @@ export default function LedgerScreen() {
   const [isLoadingLedger, setIsLoadingLedger] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
+  // Load shops filtered by selected company
   useEffect(() => {
-    if (user) loadAllShops(user.id);
-  }, [user]);
+    if (user) loadAllShops(user.id, selectedCompanyId || undefined);
+  }, [user, selectedCompanyId]);
 
   async function loadLedger(shop: Shop) {
     setSelectedShop(shop);
     setShowShopPicker(false);
     setIsLoadingLedger(true);
     try {
-      const data = await ApiService.getLedger(shop.id);
+      const data = await ApiService.getLedger(shop.id, selectedCompanyId || undefined);
       setLedger(data);
     } catch {
       setLedger(null);
@@ -218,8 +220,9 @@ export default function LedgerScreen() {
   const filteredShops = shopSearch.trim()
     ? allShops.filter(
         (s) =>
-          s.name.toLowerCase().includes(shopSearch.toLowerCase()) ||
-          s.area.toLowerCase().includes(shopSearch.toLowerCase())
+          (s.name || '').toLowerCase().includes(shopSearch.toLowerCase()) ||
+          (s.area || '').toLowerCase().includes(shopSearch.toLowerCase()) ||
+          (s.ownerName || '').toLowerCase().includes(shopSearch.toLowerCase())
       )
     : allShops;
 
@@ -237,10 +240,21 @@ export default function LedgerScreen() {
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Shop Ledger</Text>
-          <Text style={styles.headerSub}>Full account statement</Text>
+          <Text style={styles.headerSub}>
+            {selectedCompanyId
+              ? companies.find((c) => c.companyId === selectedCompanyId)?.companyName || 'Full account statement'
+              : 'Full account statement'}
+          </Text>
         </View>
+        {companies.length > 0 ? (
+          <CompanySelector
+            companies={companies}
+            selectedCompanyId={selectedCompanyId}
+            onSelectCompany={setSelectedCompanyId}
+          />
+        ) : null}
         {ledger && (
           <Pressable
             style={({ pressed }) => [styles.headerDownloadBtn, pressed && { opacity: 0.8 }]}

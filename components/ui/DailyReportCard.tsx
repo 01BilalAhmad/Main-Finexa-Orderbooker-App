@@ -20,6 +20,13 @@ import { Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme
 import { getTodayLabel, formatPKR } from '@/utils/format';
 
 
+interface CompanyBreakdownItem {
+  companyId: string;
+  companyName: string;
+  totalRecovery: number;
+  shops: number;
+}
+
 interface DailyReportProps {
   visible: boolean;
   onClose: () => void;
@@ -30,6 +37,8 @@ interface DailyReportProps {
   whatsappSent: number;
   pendingMessages: number;
   orderbookerName: string;
+  companyBreakdown?: CompanyBreakdownItem[];
+  selectedCompanyName?: string;
 }
 
 export function DailyReportCard({
@@ -42,6 +51,8 @@ export function DailyReportCard({
   whatsappSent,
   pendingMessages,
   orderbookerName,
+  companyBreakdown = [],
+  selectedCompanyName,
 }: DailyReportProps) {
   const cardRef = useRef<View>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -50,7 +61,7 @@ export function DailyReportCard({
   const visitPct = totalShops > 0 ? Math.round((shopsVisited / totalShops) * 100) : 0;
 
   const buildTextMessage = () => {
-    return [
+    const lines = [
       `📋 *Finexa Orderbooker*`,
       `📊 Daily Recovery Report`,
       ``,
@@ -59,11 +70,21 @@ export function DailyReportCard({
       ``,
       `🏪 Shops: ${shopsVisited}/${totalShops} visited (${visitPct}%)`,
       `💰 Recovery: ${formatPKR(totalRecovery)}`,
-      `📩 SMS Shops: ${smsSent} | WA Shops: ${whatsappSent}`,
-      pendingMessages > 0 ? `⚠️ ${pendingMessages} pending` : '',
-      ``,
-      `_Powered by Finexa Orderbooker_`,
-    ].filter(Boolean).join('\n');
+    ];
+    // Add company-wise breakdown in text message
+    if (companyBreakdown.length > 0) {
+      lines.push('');
+      lines.push('📊 *Company-wise Recovery:*');
+      for (const cb of companyBreakdown) {
+        lines.push(`  • ${cb.companyName}: ${formatPKR(cb.totalRecovery)} (${cb.shops} shops)`);
+      }
+    }
+    lines.push('');
+    lines.push(`📩 SMS Shops: ${smsSent} | WA Shops: ${whatsappSent}`);
+    if (pendingMessages > 0) lines.push(`⚠️ ${pendingMessages} pending`);
+    lines.push('');
+    lines.push('_Powered by Finexa Orderbooker_');
+    return lines.filter((l): l is string => true).join('\n');
   };
 
   const handleShareAsImage = async () => {
@@ -209,8 +230,38 @@ export function DailyReportCard({
                 <View style={styles.recoveryTextWrap}>
                   <Text style={styles.recoveryLabel}>TOTAL RECOVERY</Text>
                   <Text style={styles.recoveryAmount}>{formatPKR(totalRecovery)}</Text>
+                  {selectedCompanyName ? (
+                    <Text style={styles.recoveryCompanyLabel}>{selectedCompanyName}</Text>
+                  ) : null}
                 </View>
               </View>
+
+              {/* Company-wise Recovery Breakdown */}
+              {companyBreakdown.length > 0 ? (
+                <View style={styles.breakdownSection}>
+                  <View style={styles.breakdownHeader}>
+                    <MaterialIcons name="business" size={16} color="rgba(255,255,255,0.7)" />
+                    <Text style={styles.breakdownTitle}>Company-wise Recovery</Text>
+                  </View>
+                  {companyBreakdown.map((cb, idx) => {
+                    const pct = totalRecovery > 0 ? Math.round((cb.totalRecovery / totalRecovery) * 100) : 0;
+                    return (
+                      <View key={cb.companyId} style={[styles.breakdownRow, idx === companyBreakdown.length - 1 && styles.breakdownRowLast]}>
+                        <View style={styles.breakdownLeft}>
+                          <View style={styles.breakdownDot} />
+                          <Text style={styles.breakdownName} numberOfLines={1}>{cb.companyName}</Text>
+                        </View>
+                        <View style={styles.breakdownRight}>
+                          <Text style={styles.breakdownAmount}>{formatPKR(cb.totalRecovery)}</Text>
+                          <View style={styles.breakdownPill}>
+                            <Text style={styles.breakdownPillText}>{pct}%</Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
 
               {/* Stats Row — BIGGER CARDS */}
               <View style={styles.statsRow}>
@@ -522,6 +573,85 @@ const styles = StyleSheet.create({
   },
   recoveryAmount: {
     fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: '#FDE68A',
+  },
+  recoveryCompanyLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: FontWeight.medium,
+    marginTop: 2,
+  },
+  // Company Breakdown
+  breakdownSection: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    zIndex: 1,
+  },
+  breakdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  breakdownTitle: {
+    fontSize: 12,
+    fontWeight: FontWeight.bold,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.5,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  breakdownRowLast: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  breakdownLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  breakdownDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#93C5FD',
+  },
+  breakdownName: {
+    fontSize: 13,
+    fontWeight: FontWeight.semibold,
+    color: 'rgba(255,255,255,0.85)',
+    flex: 1,
+  },
+  breakdownRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  breakdownAmount: {
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: '#FDE68A',
+  },
+  breakdownPill: {
+    backgroundColor: 'rgba(253,230,138,0.15)',
+    borderRadius: Radius.full,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  breakdownPillText: {
+    fontSize: 10,
     fontWeight: FontWeight.bold,
     color: '#FDE68A',
   },

@@ -216,10 +216,15 @@ export default function TodayRouteScreen() {
     } catch { /* not critical */ }
   }
 
+  // Company-wise recovery breakdown for reports
+  const [companyRecoveryBreakdown, setCompanyRecoveryBreakdown] = useState<{
+    companyId: string; companyName: string; totalRecovery: number; shops: number;
+  }[]>([]);
+
   async function loadTodayStats() {
     if (!user) return;
     try {
-      const res = await ApiService.getRecoverySummary(getTodayDateStr());
+      const res = await ApiService.getRecoverySummary(getTodayDateStr(), selectedCompanyId || undefined);
       const myEntry = res.orderbookers.find((ob) => ob.orderbookerId === user.id);
       if (myEntry) {
         setTodayRecovery(myEntry.totalRecovery);
@@ -233,6 +238,10 @@ export default function TodayRouteScreen() {
           StorageService.saveVisitedShops([...merged]);
           return merged;
         });
+      }
+      // Store company breakdown for the report card
+      if (res.companyBreakdown && res.companyBreakdown.length > 0) {
+        setCompanyRecoveryBreakdown(res.companyBreakdown);
       }
       // If myEntry not found, don't reset — keep cached value
     } catch {
@@ -676,9 +685,10 @@ export default function TodayRouteScreen() {
     const q = searchQuery.toLowerCase();
     return todayShops.filter(
       (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.area.toLowerCase().includes(q) ||
-        s.ownerName.toLowerCase().includes(q)
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.area || '').toLowerCase().includes(q) ||
+        (s.ownerName || '').toLowerCase().includes(q) ||
+        (s.phone || '').includes(q)
     );
   }, [todayShops, searchQuery]);
 
@@ -888,6 +898,26 @@ export default function TodayRouteScreen() {
                     <Text style={styles.pillLabel}>Recovered</Text>
                   </View>
                 </View>
+
+                {/* Company-wise balance breakdown (multi-company only) */}
+                {companies.length > 1 && !selectedCompanyId ? (
+                  <View style={styles.companyBalanceRow}>
+                    {companies.map((comp) => {
+                      const compOutstanding = todayShops.reduce((sum, s) => {
+                        const cb = s.companyBalances?.find((b) => b.companyId === comp.companyId);
+                        return sum + (cb?.balance ?? 0);
+                      }, 0);
+                      if (compOutstanding === 0) return null;
+                      return (
+                        <View key={comp.companyId} style={styles.companyBalChip}>
+                          <View style={styles.companyBalDot} />
+                          <Text style={styles.companyBalName} numberOfLines={1}>{comp.companyName}</Text>
+                          <Text style={styles.companyBalAmount}>{formatPKR(compOutstanding)}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
               </LinearGradient>
 
 
@@ -1158,6 +1188,26 @@ export default function TodayRouteScreen() {
                     <Text style={styles.pillLabel}>Recovered</Text>
                   </View>
                 </View>
+
+                {/* Company-wise balance breakdown (multi-company only) */}
+                {companies.length > 1 && !selectedCompanyId ? (
+                  <View style={styles.companyBalanceRow}>
+                    {companies.map((comp) => {
+                      const compOutstanding = todayShops.reduce((sum, s) => {
+                        const cb = s.companyBalances?.find((b) => b.companyId === comp.companyId);
+                        return sum + (cb?.balance ?? 0);
+                      }, 0);
+                      if (compOutstanding === 0) return null;
+                      return (
+                        <View key={comp.companyId} style={styles.companyBalChip}>
+                          <View style={styles.companyBalDot} />
+                          <Text style={styles.companyBalName} numberOfLines={1}>{comp.companyName}</Text>
+                          <Text style={styles.companyBalAmount}>{formatPKR(compOutstanding)}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
               </LinearGradient>
 
 
@@ -1416,6 +1466,8 @@ export default function TodayRouteScreen() {
         whatsappSent={whatsappSentCount}
         pendingMessages={pendingNotifications.length}
         orderbookerName={user?.name || 'Orderbooker'}
+        companyBreakdown={companyRecoveryBreakdown}
+        selectedCompanyName={selectedCompanyName}
       />
       <PendingMessagesSheet
         visible={showPending}
@@ -1841,5 +1893,41 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  // Company-wise balance breakdown
+  companyBalanceRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  companyBalChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: Radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  companyBalDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#93C5FD',
+  },
+  companyBalName: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: FontWeight.medium,
+    maxWidth: 70,
+  },
+  companyBalAmount: {
+    fontSize: 10,
+    color: '#FDE68A',
+    fontWeight: FontWeight.bold,
   },
 });

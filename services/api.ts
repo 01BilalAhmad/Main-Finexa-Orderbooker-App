@@ -219,15 +219,19 @@ export const ApiService = {
     );
   },
 
-  getLedger: (shopId: string, limit?: number) => {
+  getLedger: (shopId: string, companyId?: string, limit?: number) => {
     const q = new URLSearchParams({ shopId });
+    if (companyId) q.set('companyId', companyId);
     if (limit) q.set('limit', String(limit));
     return request<LedgerResponse>(`/api/reports/ledger?${q.toString()}`);
   },
 
-  getRecoverySummary: (date?: string) => {
-    const q = date ? `?date=${date}` : '';
-    return request<RecoverySummaryResponse>(`/api/reports/recovery-summary${q}`);
+  getRecoverySummary: (date?: string, companyId?: string) => {
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    if (companyId) params.set('companyId', companyId);
+    const q = params.toString();
+    return request<RecoverySummaryResponse>(`/api/reports/recovery-summary${q ? `?${q}` : ''}`);
   },
 
   getSummary: () =>
