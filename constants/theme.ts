@@ -8,7 +8,7 @@ export const Colors = {
   danger: '#EF4444',
   dangerLight: '#FEE2E2',
   success: '#10B981',
-  successLight: '#DBEAFE',
+  successLight: '#D1FAE5',
   warning: '#F59E0B',
   warningLight: '#FFFBEB',
 
@@ -29,7 +29,7 @@ export const Colors = {
   tabInactive: '#94A3B8',
 
   // Extended palette
-  blue: '#4F46E5',
+  blue: '#6366F1',
   blueLight: '#EEF2FF',
   purple: '#7C3AED',
   purpleLight: '#F5F3FF',
