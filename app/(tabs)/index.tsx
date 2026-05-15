@@ -682,14 +682,18 @@ export default function TodayRouteScreen() {
   // ── Filtered shops (search) ──────────────────────────────────────────────
   const filteredShops = useMemo(() => {
     if (!searchQuery.trim()) return todayShops;
-    const q = searchQuery.toLowerCase();
-    return todayShops.filter(
-      (s) =>
-        (s.name || '').toLowerCase().includes(q) ||
-        (s.area || '').toLowerCase().includes(q) ||
-        (s.ownerName || '').toLowerCase().includes(q) ||
-        (s.phone || '').includes(q)
-    );
+    try {
+      const q = searchQuery.toLowerCase();
+      return todayShops.filter(
+        (s) =>
+          (s.name || '').toLowerCase().includes(q) ||
+          (s.area || '').toLowerCase().includes(q) ||
+          (s.ownerName || '').toLowerCase().includes(q) ||
+          (s.phone || '').includes(q)
+      );
+    } catch {
+      return todayShops;
+    }
   }, [todayShops, searchQuery]);
 
   // ── Group shops by day for all-routes mode ───────────────────────────────
@@ -746,7 +750,13 @@ export default function TodayRouteScreen() {
   }, [filteredShops, allRoutesEnabled, todayDay]);
 
   // ── Stats ────────────────────────────────────────────────────────────────
-  const totalOutstanding = todayShops.reduce((sum, s) => sum + getShopDisplayBalance(s, selectedCompanyId || user?.companyId).balance, 0);
+  const totalOutstanding = todayShops.reduce((sum, s) => {
+    try {
+      return sum + getShopDisplayBalance(s, selectedCompanyId || user?.companyId).balance;
+    } catch {
+      return sum + (s.balance || 0);
+    }
+  }, 0);
   const visitedCount = visitedShopIds.size;
   const progressPct = todayShops.length > 0 ? (visitedCount / todayShops.length) * 100 : 0;
 
@@ -904,7 +914,7 @@ export default function TodayRouteScreen() {
                   <View style={styles.companyBalanceRow}>
                     {companies.map((comp) => {
                       const compOutstanding = todayShops.reduce((sum, s) => {
-                        const cb = s.companyBalances?.find((b) => b.companyId === comp.companyId);
+                        const cb = s.companyBalances?.find((b) => b && b.companyId === comp.companyId);
                         return sum + (cb?.balance ?? 0);
                       }, 0);
                       if (compOutstanding === 0) return null;
@@ -1194,7 +1204,7 @@ export default function TodayRouteScreen() {
                   <View style={styles.companyBalanceRow}>
                     {companies.map((comp) => {
                       const compOutstanding = todayShops.reduce((sum, s) => {
-                        const cb = s.companyBalances?.find((b) => b.companyId === comp.companyId);
+                        const cb = s.companyBalances?.find((b) => b && b.companyId === comp.companyId);
                         return sum + (cb?.balance ?? 0);
                       }, 0);
                       if (compOutstanding === 0) return null;

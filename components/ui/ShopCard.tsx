@@ -8,13 +8,17 @@ import { formatPKR } from '@/utils/format';
 
 // Helper: get display balance for a shop based on the user's assigned company
 export function getShopDisplayBalance(shop: Shop, companyId?: string): { balance: number; creditLimit: number } {
-  if (companyId && shop.companyBalances && shop.companyBalances.length > 0) {
-    const companyBal = shop.companyBalances.find((cb: CompanyBalance) => cb.companyId === companyId);
-    if (companyBal) {
-      return { balance: companyBal.balance, creditLimit: companyBal.creditLimit || shop.creditLimit };
+  try {
+    if (companyId && shop.companyBalances && Array.isArray(shop.companyBalances) && shop.companyBalances.length > 0) {
+      const companyBal = shop.companyBalances.find((cb: CompanyBalance) => cb && cb.companyId === companyId);
+      if (companyBal && typeof companyBal.balance === 'number') {
+        return { balance: companyBal.balance, creditLimit: companyBal.creditLimit || shop.creditLimit || 0 };
+      }
     }
+    return { balance: shop.balance || 0, creditLimit: shop.creditLimit || 0 };
+  } catch {
+    return { balance: shop.balance || 0, creditLimit: shop.creditLimit || 0 };
   }
-  return { balance: shop.balance, creditLimit: shop.creditLimit };
 }
 
 interface ShopCardProps {

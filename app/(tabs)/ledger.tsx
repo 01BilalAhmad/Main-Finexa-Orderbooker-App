@@ -219,10 +219,15 @@ export default function LedgerScreen() {
 
   const filteredShops = shopSearch.trim()
     ? allShops.filter(
-        (s) =>
-          (s.name || '').toLowerCase().includes(shopSearch.toLowerCase()) ||
-          (s.area || '').toLowerCase().includes(shopSearch.toLowerCase()) ||
-          (s.ownerName || '').toLowerCase().includes(shopSearch.toLowerCase())
+        (s) => {
+          try {
+            return (s.name || '').toLowerCase().includes(shopSearch.toLowerCase()) ||
+              (s.area || '').toLowerCase().includes(shopSearch.toLowerCase()) ||
+              (s.ownerName || '').toLowerCase().includes(shopSearch.toLowerCase());
+          } catch {
+            return false;
+          }
+        }
       )
     : allShops;
 
