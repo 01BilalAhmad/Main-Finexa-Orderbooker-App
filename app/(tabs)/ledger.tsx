@@ -278,8 +278,8 @@ export default function LedgerScreen() {
             <MaterialIcons name="menu-book" size={24} color="#FFFFFF" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Shop Ledger</Text>
-            <Text style={styles.headerSub}>
+            <Text style={styles.headerTitle} numberOfLines={1}>Shop Ledger</Text>
+            <Text style={styles.headerSub} numberOfLines={1}>
               {selectedCompanyId
                 ? companies.find((c) => c.companyId === selectedCompanyId)?.companyName || 'Full account statement'
                 : 'Full account statement'}
@@ -350,6 +350,7 @@ export default function LedgerScreen() {
           data={reversedTxns}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           ListHeaderComponent={
             <View>
               {/* Shop info card */}
@@ -590,6 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     flex: 1,
+    minWidth: 0,
   },
   headerIconWrap: {
     width: 42,
@@ -648,7 +650,7 @@ const styles = StyleSheet.create({
   shopSelectorPlaceholder: { color: Colors.textMuted, fontWeight: FontWeight.regular },
 
   // ── List content ──
-  listContent: { padding: Spacing.md, paddingTop: 0, paddingBottom: Spacing.xxl },
+  listContent: { padding: Spacing.md, paddingTop: 0, paddingBottom: 100 },
   
   // ── Shop info card ──
   shopInfoCard: {

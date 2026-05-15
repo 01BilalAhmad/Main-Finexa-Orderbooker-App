@@ -1518,7 +1518,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   listContent: {
-    paddingBottom: Spacing.xxl + 16,
+    paddingBottom: 100,
   },
   // Hero Card
   heroCard: {
