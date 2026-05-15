@@ -73,11 +73,15 @@ export default function LoginScreen() {
 
   return (
     <LinearGradient
-      colors={['#4F46E5', '#3730A3', '#312E81']}
+      colors={['#4F46E5', '#6366F1', '#818CF8', '#A5B4FC']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.root}
     >
+      {/* Decorative circles */}
+      <View style={styles.decorCircle1} />
+      <View style={styles.decorCircle2} />
+
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -90,9 +94,9 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Logo */}
+          {/* Logo — Rounded Square */}
           <View style={styles.logoArea}>
-            <View style={styles.logoCircle}>
+            <View style={styles.logoSquare}>
               <Image
                 source={require('@/assets/images/logo.png')}
                 style={styles.logo}
@@ -100,12 +104,11 @@ export default function LoginScreen() {
               />
             </View>
             <Text style={styles.appTitle}>Finexa</Text>
-            <Text style={styles.appSubtitle}>Recovery</Text>
-            <Text style={styles.appTagline}>Recovery Management Portal</Text>
+            <Text style={styles.appSubtitle}>Recovery App</Text>
           </View>
 
-          {/* Login Card */}
-          <View style={styles.card}>
+          {/* Glassmorphism Login Card */}
+          <View style={styles.glassCard}>
             <Text style={styles.cardTitle}>Welcome Back</Text>
             <Text style={styles.cardSubtitle}>Sign in to continue</Text>
 
@@ -148,28 +151,28 @@ export default function LoginScreen() {
 
             <Pressable
               style={({ pressed }) => [
-                styles.loginBtn,
-                (isLoading || !username || !password) && styles.loginBtnDisabled,
-                pressed && !isLoading && styles.loginBtnPressed,
+                styles.signInBtnWrap,
+                (isLoading || !username || !password) && styles.signInBtnDisabled,
+                pressed && !isLoading && styles.signInBtnPressed,
               ]}
               onPress={handleLogin}
               disabled={isLoading}
             >
               <LinearGradient
-                colors={['#4338CA', '#312E81']}
+                colors={['#4F46E5', '#6366F1']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.loginBtnInner}
+                style={styles.signInBtnGradient}
               >
                 {isLoading || syncingData ? (
                   <>
                     <ActivityIndicator size="small" color="#FFFFFF" />
-                    {syncingData ? <Text style={styles.loginBtnText}>Syncing data...</Text> : null}
+                    {syncingData ? <Text style={styles.signInBtnText}>Syncing data...</Text> : null}
                   </>
                 ) : (
                   <>
                     <MaterialIcons name="login" size={20} color="#FFFFFF" />
-                    <Text style={styles.loginBtnText}>Sign In</Text>
+                    <Text style={styles.signInBtnText}>Sign In</Text>
                   </>
                 )}
               </LinearGradient>
@@ -189,6 +192,24 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
+  decorCircle1: {
+    position: 'absolute',
+    top: -80,
+    right: -80,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  decorCircle2: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
   keyboardAvoid: {
     flex: 1,
   },
@@ -200,47 +221,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xl,
   },
-  logoCircle: {
+  logoSquare: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
     ...Shadow.md,
   },
   logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 16,
   },
   appTitle: {
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.bold,
+    fontSize: 36,
+    fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 1,
   },
   appSubtitle: {
     fontSize: FontSize.lg,
-    color: '#E0E7FF',
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: FontWeight.bold,
     marginTop: -2,
     letterSpacing: 0.5,
   },
-  appTagline: {
-    fontSize: FontSize.sm,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: FontWeight.medium,
-    marginTop: Spacing.xs,
-  },
-  card: {
+  glassCard: {
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 24,
     padding: Spacing.lg,
-    ...Shadow.md,
+    ...Shadow.xl,
     marginBottom: Spacing.lg,
   },
   cardTitle: {
@@ -265,12 +280,12 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(0,0,0,0.08)',
-    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
     paddingHorizontal: Spacing.md,
     paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     marginBottom: Spacing.md,
   },
   inputIcon: {
@@ -281,21 +296,22 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     color: Colors.text,
   },
-  loginBtn: {
-    borderRadius: Radius.md,
+  signInBtnWrap: {
+    borderRadius: 14,
     marginTop: Spacing.sm,
     overflow: 'hidden',
+    ...Shadow.md,
   },
-  loginBtnInner: {
+  signInBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    paddingVertical: 15,
+    paddingVertical: 16,
   },
-  loginBtnDisabled: { opacity: 0.5 },
-  loginBtnPressed: { opacity: 0.85 },
-  loginBtnText: {
+  signInBtnDisabled: { opacity: 0.5 },
+  signInBtnPressed: { opacity: 0.85 },
+  signInBtnText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
     color: '#FFFFFF',
@@ -303,7 +319,7 @@ const styles = StyleSheet.create({
   footer: {
     textAlign: 'center',
     fontSize: FontSize.xs,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: Spacing.md,
   },
 });

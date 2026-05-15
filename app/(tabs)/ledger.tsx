@@ -53,6 +53,8 @@ const summaryPillStyles = StyleSheet.create({
     padding: Spacing.sm,
     alignItems: 'center',
     gap: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   iconWrap: {
     width: 30,
@@ -79,14 +81,14 @@ function TxnRow({ item }: { item: Transaction }) {
   const isCredit = item.type === 'credit';
   return (
     <View style={txnStyles.row}>
-      {/* Type indicator */}
-      <View style={[txnStyles.typeBar, { backgroundColor: isCredit ? Colors.secondary : Colors.primary }]} />
+      {/* Type indicator — gradient-style bar */}
+      <View style={[txnStyles.typeBar, { backgroundColor: isCredit ? Colors.secondary : '#4F46E5' }]} />
 
       <View style={txnStyles.body}>
         <View style={txnStyles.topRow}>
           <View style={txnStyles.badges}>
-            <View style={[txnStyles.typeBadge, { backgroundColor: isCredit ? Colors.secondaryLight : Colors.primaryLight }]}>
-              <Text style={[txnStyles.typeBadgeText, { color: isCredit ? Colors.secondary : Colors.primaryDark }]}>
+            <View style={[txnStyles.typeBadge, { backgroundColor: isCredit ? Colors.secondaryLight : '#EEF2FF' }]}>
+              <Text style={[txnStyles.typeBadgeText, { color: isCredit ? Colors.secondary : '#4F46E5' }]}>
                 {isCredit ? 'CREDIT' : 'RECOVERY'}
               </Text>
             </View>
@@ -101,7 +103,7 @@ function TxnRow({ item }: { item: Transaction }) {
               </View>
             ) : null}
           </View>
-          <Text style={[txnStyles.amount, { color: isCredit ? Colors.secondary : Colors.primary }]}>
+          <Text style={[txnStyles.amount, { color: isCredit ? Colors.secondary : '#4F46E5' }]}>
             {isCredit ? '+' : '-'}{formatPKR(item.amount)}
           </Text>
         </View>
@@ -127,7 +129,7 @@ const txnStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    borderRadius: 16,
     marginBottom: Spacing.sm,
     overflow: 'hidden',
     ...Shadow.sm,
@@ -234,13 +236,13 @@ export default function LedgerScreen() {
   const reversedTxns = ledger ? [...ledger.transactions].reverse() : [];
 
   const balanceColor =
-    (ledger?.summary.currentBalance ?? 0) > 0 ? Colors.danger : Colors.primary;
+    (ledger?.summary.currentBalance ?? 0) > 0 ? Colors.danger : '#4F46E5';
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Gradient header */}
+      {/* Gradient header — 3-color */}
       <LinearGradient
-        colors={['#4F46E5', '#3730A3']}
+        colors={['#4F46E5', '#6366F1', '#818CF8']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -275,13 +277,13 @@ export default function LedgerScreen() {
         )}
       </LinearGradient>
 
-      {/* Shop selector */}
+      {/* Shop selector — pill shape */}
       <Pressable
         style={({ pressed }) => [styles.shopSelector, pressed && { opacity: 0.85 }]}
         onPress={() => setShowShopPicker(true)}
       >
         <View style={styles.shopSelectorIcon}>
-          <MaterialIcons name="store" size={18} color={Colors.primary} />
+          <MaterialIcons name="store" size={18} color="#4F46E5" />
         </View>
         <Text
           style={[styles.shopSelectorText, !selectedShop && styles.shopSelectorPlaceholder]}
@@ -296,7 +298,7 @@ export default function LedgerScreen() {
       {!selectedShop ? (
         <View style={styles.emptyContainer}>
           <LinearGradient colors={[Colors.primaryLight, Colors.background]} style={styles.emptyGrad}>
-            <MaterialIcons name="menu-book" size={64} color={Colors.primary} />
+            <MaterialIcons name="menu-book" size={64} color="#4F46E5" />
             <Text style={styles.emptyTitle}>Select a Shop</Text>
             <Text style={styles.emptySubtitle}>
               Choose a shop from the list to view its full account statement
@@ -305,7 +307,7 @@ export default function LedgerScreen() {
         </View>
       ) : isLoadingLedger ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color="#4F46E5" />
           <Text style={styles.loadingText}>Loading ledger...</Text>
         </View>
       ) : ledger ? (
@@ -341,7 +343,7 @@ export default function LedgerScreen() {
                 </View>
               </View>
 
-              {/* Summary pills */}
+              {/* Summary pills — glassmorphism */}
               <View style={styles.summaryRow}>
                 <SummaryPill
                   label="Total Credit"
@@ -365,8 +367,8 @@ export default function LedgerScreen() {
                       ? `${(ledger.summary.totalRecovery / 1000).toFixed(0)}K`
                       : formatPKR(ledger.summary.totalRecovery)
                   }
-                  color={Colors.primary}
-                  bg={Colors.primaryLight}
+                  color="#4F46E5"
+                  bg="#EEF2FF"
                   icon="trending-up"
                 />
                 <SummaryPill
@@ -380,20 +382,20 @@ export default function LedgerScreen() {
                   }
                   color={balanceColor}
                   bg={
-                    ledger.summary.currentBalance > 0 ? Colors.dangerLight : Colors.primaryLight
+                    ledger.summary.currentBalance > 0 ? Colors.dangerLight : '#EEF2FF'
                   }
                   icon="account-balance-wallet"
                 />
               </View>
 
-              {/* Prominent PDF Download Button */}
+              {/* Prominent PDF Download Button — Indigo gradient */}
               <Pressable
                 style={({ pressed }) => [styles.pdfDownloadCard, pressed && styles.pdfDownloadCardPressed]}
                 onPress={handleDownloadPdf}
                 disabled={isGeneratingPdf}
               >
                 <LinearGradient
-                  colors={['#EF4444', '#DC2626']}
+                  colors={['#4F46E5', '#6366F1']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.pdfGradient}
@@ -480,7 +482,7 @@ export default function LedgerScreen() {
             />
           </View>
           {isLoadingAll ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.md }} />
+            <ActivityIndicator color="#4F46E5" style={{ marginVertical: Spacing.md }} />
           ) : (
             <FlatList
               data={filteredShops}
@@ -500,11 +502,11 @@ export default function LedgerScreen() {
                     <Text style={styles.shopPickerArea}>{item.area}</Text>
                   </View>
                   <View style={styles.shopPickerRight}>
-                    <Text style={[styles.shopPickerBalance, { color: getShopDisplayBalance(item, selectedCompanyId || user?.companyId).balance > 0 ? Colors.danger : Colors.primary }]}>
+                    <Text style={[styles.shopPickerBalance, { color: getShopDisplayBalance(item, selectedCompanyId || user?.companyId).balance > 0 ? Colors.danger : '#4F46E5' }]}>
                       {formatPKR(getShopDisplayBalance(item, selectedCompanyId || user?.companyId).balance)}
                     </Text>
                     {item.id === selectedShop?.id ? (
-                      <MaterialIcons name="check-circle" size={16} color={Colors.primary} />
+                      <MaterialIcons name="check-circle" size={16} color="#4F46E5" />
                     ) : null}
                   </View>
                 </Pressable>
@@ -529,6 +531,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: '#FFFFFF' },
   headerSub: { fontSize: FontSize.xs, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
@@ -548,6 +552,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Shop selector — pill shape
   shopSelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -555,12 +560,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     margin: Spacing.md,
     marginTop: -Spacing.sm,
-    borderRadius: Radius.full,
+    borderRadius: 30,
     paddingHorizontal: Spacing.md,
     paddingVertical: 14,
     ...Shadow.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
   shopSelectorIcon: {
     width: 32,
@@ -575,7 +580,7 @@ const styles = StyleSheet.create({
   listContent: { padding: Spacing.md, paddingTop: 0, paddingBottom: Spacing.xxl },
   shopInfoCard: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     ...Shadow.sm,
@@ -584,23 +589,23 @@ const styles = StyleSheet.create({
   shopInitials: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primaryLight,
+    borderRadius: 14,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: '#4F46E5',
   },
-  shopInitialsText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.primaryDark },
+  shopInitialsText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: '#4F46E5' },
   shopInfoName: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.text },
   shopInfoOwner: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 1, marginBottom: 4 },
   shopInfoMeta: { flexDirection: 'row', alignItems: 'center', gap: 3, flexWrap: 'wrap' },
   shopInfoMetaText: { fontSize: FontSize.xs, color: Colors.textMuted },
   shopInfoDot: { color: Colors.textMuted, marginHorizontal: 2 },
   summaryRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
-  // PDF Download Card
+  // PDF Download Card — Indigo gradient
   pdfDownloadCard: {
-    borderRadius: Radius.md,
+    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: Spacing.md,
     ...Shadow.md,
@@ -615,7 +620,7 @@ const styles = StyleSheet.create({
   pdfIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: Radius.sm,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -680,8 +685,8 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: FontSize.base, color: Colors.textSecondary },
   retryBtn: {
     marginTop: Spacing.md,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.sm,
+    backgroundColor: '#4F46E5',
+    borderRadius: 30,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
   },
@@ -717,7 +722,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     backgroundColor: Colors.background,
-    borderRadius: Radius.sm,
+    borderRadius: 30,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     marginBottom: Spacing.sm,
@@ -734,7 +739,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
-  shopPickerItemActive: { backgroundColor: Colors.primaryLight, borderRadius: Radius.sm },
+  shopPickerItemActive: { backgroundColor: '#EEF2FF', borderRadius: Radius.sm },
   shopPickerLeft: { flex: 1, marginRight: Spacing.md },
   shopPickerName: { fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.text, marginBottom: 2 },
   shopPickerArea: { fontSize: FontSize.sm, color: Colors.textSecondary },

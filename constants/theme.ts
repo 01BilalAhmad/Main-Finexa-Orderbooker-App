@@ -12,7 +12,7 @@ export const Colors = {
   warning: '#F59E0B',
   warningLight: '#FFFBEB',
 
-  background: '#F8FAFC',
+  background: '#F1F5F9',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   border: '#E2E8F0',

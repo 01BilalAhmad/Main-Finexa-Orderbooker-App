@@ -32,7 +32,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
   return (
     <View style={infoRowStyles.row}>
       <View style={infoRowStyles.iconWrap}>
-        <MaterialIcons name={icon as any} size={18} color={Colors.primary} />
+        <MaterialIcons name={icon as any} size={18} color="#4F46E5" />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={infoRowStyles.label}>{label}</Text>
@@ -49,10 +49,10 @@ const infoRowStyles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primaryLight,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -97,8 +97,8 @@ function KpiCard({
 const kpiStyles = StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
+    borderRadius: 16,
+    padding: 14,
     backgroundColor: 'rgba(255,255,255,0.7)',
     ...Shadow.sm,
     borderWidth: 1,
@@ -223,9 +223,9 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Hero profile card */}
+        {/* Hero profile card — 3-color gradient */}
         <LinearGradient
-          colors={['#4F46E5', '#3730A3']}
+          colors={['#4F46E5', '#6366F1', '#818CF8']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.profileHero}
@@ -234,11 +234,10 @@ export default function ProfileScreen() {
           <View style={styles.bubble1} />
           <View style={styles.bubble2} />
 
+          {/* Rounded Square Avatar */}
           <View style={styles.avatarWrap}>
-            <View style={styles.avatarRing}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{initials}</Text>
-              </View>
+            <View style={styles.avatarSquare}>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
             <View style={styles.activeIndicator} />
           </View>
@@ -249,14 +248,14 @@ export default function ProfileScreen() {
           </View>
         </LinearGradient>
 
-        {/* Info card */}
+        {/* Glassmorphism Info card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Account Details</Text>
           <InfoRow icon="person" label="Username" value={`@${user.username}`} />
           <View style={styles.divider} />
           <View style={infoRowStyles.row}>
             <View style={infoRowStyles.iconWrap}>
-              <MaterialIcons name="call" size={18} color={Colors.primary} />
+              <MaterialIcons name="call" size={18} color="#4F46E5" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={infoRowStyles.label}>Phone Number</Text>
@@ -409,7 +408,7 @@ export default function ProfileScreen() {
         >
           <View style={styles.analysisToggleLeft}>
             <View style={styles.analysisToggleIcon}>
-              <MaterialIcons name="analytics" size={18} color={Colors.primary} />
+              <MaterialIcons name="analytics" size={18} color="#4F46E5" />
             </View>
             <View>
               <Text style={styles.analysisToggleTitle}>Recovery Analysis</Text>
@@ -435,7 +434,7 @@ export default function ProfileScreen() {
         >
           <View style={styles.changePinLeft}>
             <View style={styles.changePinIcon}>
-              <MaterialIcons name="pin" size={18} color={Colors.primary} />
+              <MaterialIcons name="pin" size={18} color="#4F46E5" />
             </View>
             <View>
               <Text style={styles.changePinTitle}>Change PIN</Text>
@@ -445,20 +444,27 @@ export default function ProfileScreen() {
           <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
         </Pressable>
 
-        {/* Logout */}
+        {/* Gradient Logout Button */}
         <Pressable
-          style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [styles.logoutBtnWrap, pressed && { opacity: 0.85 }]}
           onPress={handleLogout}
           disabled={loggingOut}
         >
-          {loggingOut ? (
-            <ActivityIndicator size="small" color={Colors.textInverse} />
-          ) : (
-            <>
-              <MaterialIcons name="logout" size={20} color={Colors.textInverse} />
-              <Text style={styles.logoutBtnText}>Logout</Text>
-            </>
-          )}
+          <LinearGradient
+            colors={['#EF4444', '#F87171']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.logoutBtnGradient}
+          >
+            {loggingOut ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <MaterialIcons name="logout" size={20} color={Colors.textInverse} />
+                <Text style={styles.logoutBtnText}>Logout</Text>
+              </>
+            )}
+          </LinearGradient>
         </Pressable>
 
         <View style={{ height: Spacing.xxl }} />
@@ -476,6 +482,8 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.md,
     overflow: 'hidden',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
   bubble1: {
     position: 'absolute',
@@ -496,20 +504,16 @@ const styles = StyleSheet.create({
     left: -30,
   },
   avatarWrap: { position: 'relative', marginBottom: Spacing.md },
-  avatarRing: {
+  // Rounded Square Avatar
+  avatarSquare: {
     width: 88,
     height: 88,
-    borderRadius: 44,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.45)',
-    padding: 3,
-  },
-  avatarCircle: {
-    flex: 1,
-    borderRadius: 40,
+    borderRadius: 28,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   avatarText: { fontSize: FontSize.xxl, fontWeight: FontWeight.bold, color: '#FFFFFF' },
   activeIndicator: {
@@ -521,7 +525,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: '#A7F3D0',
     borderWidth: 2,
-    borderColor: Colors.primaryDark,
+    borderColor: '#4F46E5',
   },
   profileName: {
     fontSize: FontSize.xl,
@@ -541,13 +545,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
   },
   roleText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: '#FFFFFF', letterSpacing: 1 },
+  // Glassmorphism Info Card
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderRadius: 20,
     padding: Spacing.md,
     margin: Spacing.md,
-    marginBottom: 0,
-    ...Shadow.md,
+    marginTop: -Spacing.md,
+    ...Shadow.lg,
   },
   cardTitle: {
     fontSize: FontSize.sm,
@@ -587,26 +592,29 @@ const styles = StyleSheet.create({
   },
   analysisToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   analysisToggleIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primaryLight,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   analysisToggleTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.text },
   analysisToggleSub: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 1 },
-  logoutBtn: {
+  // Gradient Logout Button
+  logoutBtnWrap: {
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    borderRadius: 30,
+    overflow: 'hidden',
+    ...Shadow.md,
+  },
+  logoutBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.danger,
-    borderRadius: Radius.md,
     paddingVertical: 15,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.sm,
-    ...Shadow.sm,
   },
   logoutBtnText: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.textInverse },
   changePinBtn: {
@@ -614,7 +622,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    borderRadius: 16,
     padding: Spacing.md,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.sm,
@@ -628,10 +636,10 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   changePinIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primaryLight,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },

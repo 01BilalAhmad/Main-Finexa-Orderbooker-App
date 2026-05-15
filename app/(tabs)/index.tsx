@@ -814,7 +814,7 @@ export default function TodayRouteScreen() {
             <View>
               {/* Hero Card - All Routes */}
               <LinearGradient
-                colors={['#4F46E5', '#3730A3']}
+                colors={['#4F46E5', '#6366F1', '#818CF8']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -1104,7 +1104,7 @@ export default function TodayRouteScreen() {
             <View>
               {/* Hero Card - Normal */}
               <LinearGradient
-                colors={['#4F46E5', '#3730A3']}
+                colors={['#4F46E5', '#6366F1', '#818CF8']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -1531,7 +1531,8 @@ const styles = StyleSheet.create({
   heroCard: {
     margin: Spacing.md,
     marginBottom: Spacing.sm,
-    borderRadius: Radius.xl,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     padding: Spacing.lg,
     overflow: 'hidden',
     ...Shadow.lg,
@@ -1578,7 +1579,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: Radius.full,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1586,30 +1587,30 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
   },
   allRoutesBadge: {
-    backgroundColor: 'rgba(79,70,229,0.25)',
-    borderColor: 'rgba(79,70,229,0.5)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   reportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(250,204,21,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: Radius.full,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(250,204,21,0.35)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   pendingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: Radius.full,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   pendingBadgeActive: {
     backgroundColor: 'rgba(239,68,68,0.2)',
@@ -1662,18 +1663,18 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#A5B4FC',
     borderRadius: Radius.full,
   },
-  // Pills
+  // Pills — Bento-style glassmorphism
   pillsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: Radius.lg,
     padding: Spacing.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   pill: {
     flex: 1,
@@ -1683,7 +1684,7 @@ const styles = StyleSheet.create({
   pillDivider: {
     width: 1,
     height: 30,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   pillValue: {
     fontSize: FontSize.md,
@@ -1693,7 +1694,7 @@ const styles = StyleSheet.create({
   pillGreen: { color: '#A7F3D0' },
   pillLabel: {
     fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.6)',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     fontWeight: FontWeight.medium,
@@ -1735,7 +1736,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
   },
-  // Search
+  // Search — floating pill
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1743,12 +1744,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.sm,
-    borderRadius: Radius.full,
+    borderRadius: 40,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 11,
+    paddingVertical: 12,
     ...Shadow.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
   searchInput: {
     flex: 1,

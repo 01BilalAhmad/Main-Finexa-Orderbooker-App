@@ -2,6 +2,7 @@
 import React, { memo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Linking, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
 import { Shop, CompanyBalance } from '@/services/api';
 import { formatPKR } from '@/utils/format';
@@ -89,13 +90,27 @@ export const ShopCard = memo(function ShopCard({
       ]}
       onPress={onPress}
     >
-      {/* Recovery submitted indicator - blue left stripe */}
-      {showRecoveryAccent && <View style={styles.recoveryStripe} />}
-      {/* Visited indicator - lighter blue stripe (only if no recovery) */}
-      {isVisited && !showRecoveryAccent && <View style={styles.visitedStripe} />}
+      {/* Gradient stripe on left */}
+      {showRecoveryAccent && (
+        <LinearGradient
+          colors={['#6366F1', '#4F46E5']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.recoveryStripe}
+        />
+      )}
+      {isVisited && !showRecoveryAccent && (
+        <LinearGradient
+          colors={['#818CF8', '#6366F1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.visitedStripe}
+        />
+      )}
 
       {/* Top row: Avatar + Info + Balance */}
       <View style={styles.topRow}>
+        {/* Rounded Square Avatar */}
         <View style={[
           styles.shopAvatar,
           showRecoveryAccent && styles.shopAvatarRecovery,
@@ -153,10 +168,17 @@ export const ShopCard = memo(function ShopCard({
         </View>
       ) : null}
 
-      {/* Credit utilisation bar */}
+      {/* Credit utilisation bar with gradient fill */}
       <View style={styles.creditRow}>
         <View style={styles.creditTrack}>
-          <View style={[styles.creditFill, { width: `${utilisation}%`, backgroundColor: barColor }]} />
+          {utilisation > 0 ? (
+            <LinearGradient
+              colors={barColor === Colors.danger ? ['#EF4444', '#F87171'] : barColor === Colors.secondary ? ['#F59E0B', '#FBBF24'] : ['#6366F1', '#818CF8']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.creditFill, { width: `${utilisation}%` }]}
+            />
+          ) : null}
         </View>
         <Text style={[styles.creditPct, { color: barColor }]}>
           {utilisation.toFixed(0)}%
@@ -166,7 +188,7 @@ export const ShopCard = memo(function ShopCard({
         Credit: {formatPKR(displayBalance)} / {formatPKR(displayCreditLimit)}
       </Text>
 
-      {/* Actions */}
+      {/* Actions — Pill style buttons */}
       <View style={styles.actions}>
         {hasRecovery ? (
           // Already recovered today - show disabled button
@@ -177,7 +199,7 @@ export const ShopCard = memo(function ShopCard({
         ) : (
           <Pressable
             style={({ pressed }) => [
-              styles.collectBtn,
+              styles.collectBtnWrap,
               isZeroBalance && styles.collectBtnDisabled,
               pressed && !isZeroBalance && styles.collectBtnPressed,
             ]}
@@ -185,12 +207,20 @@ export const ShopCard = memo(function ShopCard({
             hitSlop={4}
             disabled={isZeroBalance}
           >
-            <MaterialIcons name="payments" size={16} color={isZeroBalance ? Colors.textMuted : Colors.textInverse} />
-            <Text style={[styles.collectBtnText, isZeroBalance && { color: Colors.textMuted }]}>
-              {isZeroBalance ? 'No Balance' : 'Collect Recovery'}
-            </Text>
+            <LinearGradient
+              colors={isZeroBalance ? ['#CBD5E1', '#CBD5E1'] : ['#4F46E5', '#6366F1']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.collectBtnGradient}
+            >
+              <MaterialIcons name="payments" size={16} color={isZeroBalance ? Colors.textMuted : Colors.textInverse} />
+              <Text style={[styles.collectBtnText, isZeroBalance && { color: Colors.textMuted }]}>
+                {isZeroBalance ? 'No Balance' : 'Collect Recovery'}
+              </Text>
+            </LinearGradient>
           </Pressable>
         )}
+        {/* GPS - circle button */}
         <Pressable
           style={({ pressed }) => [styles.gpsBtn, isVisited && styles.gpsBtnVisited, pressed && styles.gpsBtnPressed]}
           onPress={onGpsVisit}
@@ -199,16 +229,18 @@ export const ShopCard = memo(function ShopCard({
           <MaterialIcons
             name={isVisited ? 'check-circle' : 'my-location'}
             size={18}
-            color={isVisited ? Colors.primary : Colors.blue}
+            color={isVisited ? Colors.primary : '#4F46E5'}
           />
         </Pressable>
+        {/* Call - circle button */}
         <Pressable
           style={({ pressed }) => [styles.callBtn, pressed && styles.callBtnPressed]}
           onPress={handleCall}
           hitSlop={4}
         >
-          <MaterialIcons name="call" size={18} color={Colors.primary} />
+          <MaterialIcons name="call" size={18} color="#059669" />
         </Pressable>
+        {/* Detail - circle button */}
         <Pressable
           style={({ pressed }) => [styles.detailBtn, pressed && styles.detailBtnPressed]}
           onPress={onPress}
@@ -224,7 +256,7 @@ export const ShopCard = memo(function ShopCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    borderRadius: 20,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     ...Shadow.md,
@@ -248,26 +280,25 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   cardPressed: { opacity: 0.94, transform: [{ scale: 0.99 }] },
-  // Recovery submitted stripe - prominent blue
+  // Gradient stripe - recovery submitted
   recoveryStripe: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
     width: 5,
-    backgroundColor: '#4F46E5',
-    borderTopLeftRadius: Radius.lg,
-    borderBottomLeftRadius: Radius.lg,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
   },
+  // Visited stripe
   visitedStripe: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
     width: 4,
-    backgroundColor: Colors.primary,
-    borderTopLeftRadius: Radius.lg,
-    borderBottomLeftRadius: Radius.lg,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
   },
   topRow: {
     flexDirection: 'row',
@@ -276,11 +307,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     paddingLeft: 2,
   },
+  // Rounded Square Avatar
   shopAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primaryLight,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -293,7 +325,7 @@ const styles = StyleSheet.create({
   shopAvatarText: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    color: '#4F46E5',
   },
   shopAvatarTextRecovery: {
     color: '#FFFFFF',
@@ -319,8 +351,9 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   balance: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   // Recovery submitted badge - blue filled
   recoveryBadge: {
@@ -457,7 +490,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: '#4F46E5',
-    borderRadius: Radius.sm,
+    borderRadius: 30,
     paddingVertical: 10,
     paddingHorizontal: Spacing.sm,
   },
@@ -466,19 +499,23 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.semibold,
     color: '#FFFFFF',
   },
-  collectBtn: {
+  // Collect Recovery - gradient pill button
+  collectBtnWrap: {
     flex: 1,
+    borderRadius: 30,
+    overflow: 'hidden',
+    ...Shadow.sm,
+  },
+  collectBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.sm,
     paddingVertical: 10,
     paddingHorizontal: Spacing.sm,
   },
   collectBtnDisabled: {
-    backgroundColor: Colors.border,
+    opacity: 1,
   },
   collectBtnPressed: { opacity: 0.85 },
   collectBtnText: {
@@ -486,41 +523,44 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.semibold,
     color: Colors.textInverse,
   },
+  // GPS - circle button with indigo theme
   gpsBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: Radius.sm,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1.5,
-    borderColor: Colors.blue,
+    borderColor: '#C7D2FE',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.blueLight,
+    backgroundColor: '#EEF2FF',
   },
   gpsBtnVisited: {
     borderColor: Colors.primary,
     backgroundColor: Colors.primaryLight,
   },
   gpsBtnPressed: { opacity: 0.7 },
+  // Call - circle button with green theme
   callBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: Radius.sm,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: '#ECFDF5',
   },
   callBtnPressed: { opacity: 0.7 },
+  // Detail - circle button with gray theme
   detailBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: Radius.sm,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: '#F8FAFC',
   },
   detailBtnPressed: { opacity: 0.7 },
 });
