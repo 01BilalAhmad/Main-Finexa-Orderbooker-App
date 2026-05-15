@@ -54,7 +54,7 @@ function buildMessage(shopName: string, openingBalance: number, recoveryAmount: 
     year: 'numeric',
   });
 
-  let msg = `Finexa Orderbooker - Recovery Update\n\n`
+  let msg = `Finexa Recovery App - Recovery Update\n\n`
     + `Dear ${shopName},\n\n`
     + `Your account has been updated:\n\n`
     + `Opening Balance: ${formatPKR(openingBalance)}\n`
@@ -65,7 +65,7 @@ function buildMessage(shopName: string, openingBalance: number, recoveryAmount: 
     msg += `\nDistributor No: ${distributorPhone}\n`;
   }
   msg += `\nThank you for your payment!\n`
-    + `Finexa Orderbooker`;
+    + `Finexa Recovery App`;
   return msg;
 }
 

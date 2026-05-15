@@ -220,7 +220,7 @@ export function GpsVisitBottomSheet({
           <View style={styles.handle} />
 
           <LinearGradient
-            colors={['#2563EB', '#1D4ED8', '#1E40AF']}
+            colors={['#4F46E5', '#4338CA', '#3730A3']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
@@ -456,14 +456,14 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    backgroundColor: 'rgba(79, 70, 229, 0.1)',
   },
   capturingInner: {
     position: 'absolute',
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+    backgroundColor: 'rgba(79, 70, 229, 0.15)',
   },
   capturingTitle: {
     fontSize: FontSize.lg,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(37, 99, 235, 0.85)',
+    backgroundColor: 'rgba(79, 70, 229, 0.85)',
     borderRadius: Radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,

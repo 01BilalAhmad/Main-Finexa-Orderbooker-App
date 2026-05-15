@@ -117,7 +117,7 @@ export function NotificationChoice({ visible, payload, onDone }: NotificationCho
 
   /** Build recovery text message */
   const buildRecoveryText = (p: NotificationPayload): string => {
-    let msg = `Finexa Orderbooker - Recovery Update\n\n`
+    let msg = `Finexa Recovery App - Recovery Update\n\n`
       + `Dear ${p.shopName},\n\n`
       + `Your account has been updated:\n\n`
       + `Opening Balance: ${formatPKR(p.openingBalance)}\n`
@@ -128,7 +128,7 @@ export function NotificationChoice({ visible, payload, onDone }: NotificationCho
       msg += `\nDistributor No: ${p.distributorPhone}\n`;
     }
     msg += `\nThank you for your payment!\n`
-      + `Finexa Orderbooker`;
+      + `Finexa Recovery App`;
     return msg;
   };
 
@@ -322,7 +322,7 @@ export function NotificationChoice({ visible, payload, onDone }: NotificationCho
               </View>
 
               {/* ── 2. Company Name ── */}
-              <Text style={styles.receiptCompanyName}>{payload.companyName || 'Finexa Orderbooker'}</Text>
+              <Text style={styles.receiptCompanyName}>{payload.companyName || 'Finexa Recovery App'}</Text>
 
               {/* ── 3. Payment Receipt ── */}
               <Text style={styles.receiptPaymentLabel}>Payment Receipt</Text>
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     paddingHorizontal: 24,
     paddingVertical: 20,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
     overflow: 'hidden',
   },
   // System header: AL-FALAH CREDIT SYSTEM

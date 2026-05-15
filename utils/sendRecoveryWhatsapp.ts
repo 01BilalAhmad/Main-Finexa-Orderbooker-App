@@ -79,7 +79,7 @@ export function buildRecoveryMessage(
     year: 'numeric',
   });
 
-  return `Finexa Orderbooker - Recovery Update\n\n`
+  return `Finexa Recovery App - Recovery Update\n\n`
     + `Dear ${shopName},\n\n`
     + `Your account has been updated:\n\n`
     + `Opening Balance: Rs. ${openingBalance.toLocaleString('en-PK')}\n`
@@ -87,5 +87,5 @@ export function buildRecoveryMessage(
     + `Remaining Balance: Rs. ${remainingBalance.toLocaleString('en-PK')}\n\n`
     + `Date: ${today}\n\n`
     + `Thank you for your payment!\n`
-    + `Finexa Orderbooker`;
+    + `Finexa Recovery App`;
 }

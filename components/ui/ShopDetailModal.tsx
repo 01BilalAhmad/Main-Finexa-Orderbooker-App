@@ -311,14 +311,14 @@ export const ShopDetailModal = memo(function ShopDetailModal({
               {currentPhone ? (
                 <View style={styles.phoneChipRow}>
                   <Pressable
-                    style={[styles.chip, { backgroundColor: '#EFF6FF' }]}
+                    style={[styles.chip, { backgroundColor: '#EEF2FF' }]}
                     onPress={() => Linking.openURL(`tel:${currentPhone}`)}
                   >
-                    <MaterialIcons name="call" size={13} color="#2563EB" />
-                    <Text style={[styles.chipText, { color: '#2563EB' }]}>{currentPhone}</Text>
+                    <MaterialIcons name="call" size={13} color="#4F46E5" />
+                    <Text style={[styles.chipText, { color: '#4F46E5' }]}>{currentPhone}</Text>
                   </Pressable>
                   <Pressable onPress={handleEditPhone} hitSlop={8} style={styles.phoneEditBtn}>
-                    <MaterialIcons name="edit" size={14} color="#2563EB" />
+                    <MaterialIcons name="edit" size={14} color="#4F46E5" />
                   </Pressable>
                 </View>
               ) : (
@@ -361,11 +361,11 @@ export const ShopDetailModal = memo(function ShopDetailModal({
               </View>
               <View style={styles.balanceDivider} />
               <View style={styles.balanceCard}>
-                <View style={[styles.balanceIconWrap, { backgroundColor: '#EFF6FF' }]}>
-                  <MaterialIcons name="credit-card" size={20} color="#2563EB" />
+                <View style={[styles.balanceIconWrap, { backgroundColor: '#EEF2FF' }]}>
+                  <MaterialIcons name="credit-card" size={20} color="#4F46E5" />
                 </View>
                 <Text style={styles.balanceLabel}>Credit Limit</Text>
-                <Text style={[styles.balanceValue, { color: '#2563EB' }]}>
+                <Text style={[styles.balanceValue, { color: '#4F46E5' }]}>
                   {formatPKR(displayCreditLimit)}
                 </Text>
               </View>
@@ -446,7 +446,7 @@ export const ShopDetailModal = memo(function ShopDetailModal({
                     datasets: [
                       {
                         data: chartData.recoveries.map((v) => Math.max(v, 0)),
-                        color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+                        color: (opacity = 1) => `rgba(79, 70, 229, ${opacity})`,
                       },
                     ],
                   }}
@@ -459,7 +459,7 @@ export const ShopDetailModal = memo(function ShopDetailModal({
                     backgroundGradientFrom: Colors.surface,
                     backgroundGradientTo: Colors.surface,
                     decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+                    color: (opacity = 1) => `rgba(79, 70, 229, ${opacity})`,
                     labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
                     barPercentage: 0.7,
                     propsForBackgroundLines: {
@@ -614,7 +614,7 @@ export const ShopDetailModal = memo(function ShopDetailModal({
             <View style={styles.phoneEditCard}>
               <View style={styles.phoneEditHeader}>
                 <View style={styles.phoneEditIconWrap}>
-                  <MaterialIcons name="phone" size={22} color="#2563EB" />
+                  <MaterialIcons name="phone" size={22} color="#4F46E5" />
                 </View>
                 <Text style={styles.phoneEditTitle}>Edit Phone & Owner</Text>
                 <Text style={styles.phoneEditSubtitle}>{shop.name}</Text>
@@ -1129,7 +1129,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1157,7 +1157,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.sm,
@@ -1217,7 +1217,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 14,
     borderRadius: Radius.md,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4F46E5',
   },
   phoneEditSaveBtnDisabled: {
     opacity: 0.5,

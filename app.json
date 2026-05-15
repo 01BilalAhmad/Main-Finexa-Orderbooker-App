@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Finexa Orderbooker",
-    "slug": "finexa-orderbooker",
+    "name": "Finexa Recovery App",
+    "slug": "finexa-recovery-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -14,7 +14,7 @@
       "package": "com.finexa.orderbooker",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#1D4ED8"
+        "backgroundColor": "#4338CA"
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -37,20 +37,20 @@
           "image": "./assets/images/splash.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#1D4ED8"
+          "backgroundColor": "#4338CA"
         }
       ],
       "expo-web-browser",
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Finexa Orderbooker to access your location for GPS verification during recovery collection."
+          "locationAlwaysAndWhenInUsePermission": "Allow Finexa Recovery App to access your location for GPS verification during recovery collection."
         }
       ],
       [
         "./plugins/withDirectSms.js",
         {
-          "sendSmsPermission": "Allow Finexa Orderbooker to send SMS notifications for recovery updates."
+          "sendSmsPermission": "Allow Finexa Recovery App to send SMS notifications for recovery updates."
         }
       ],
       "expo-secure-store",

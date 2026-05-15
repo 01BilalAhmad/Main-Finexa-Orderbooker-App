@@ -62,7 +62,7 @@ export function DailyReportCard({
 
   const buildTextMessage = () => {
     const lines = [
-      `📋 *Finexa Orderbooker*`,
+      `📋 *Finexa Recovery App*`,
       `📊 Daily Recovery Report`,
       ``,
       `📅 ${todayLabel}`,
@@ -83,7 +83,7 @@ export function DailyReportCard({
     lines.push(`📩 SMS Shops: ${smsSent} | WA Shops: ${whatsappSent}`);
     if (pendingMessages > 0) lines.push(`⚠️ ${pendingMessages} pending`);
     lines.push('');
-    lines.push('_Powered by Finexa Orderbooker_');
+    lines.push('_Powered by Finexa Recovery App_');
     return lines.filter((l): l is string => true).join('\n');
   };
 
@@ -182,7 +182,7 @@ export function DailyReportCard({
                   <MaterialIcons name="account-balance" size={28} color="#FFFFFF" />
                 </View>
                 <View style={styles.brandTextWrap}>
-                  <Text style={styles.brandName}>Finexa Orderbooker</Text>
+                  <Text style={styles.brandName}>Finexa Recovery App</Text>
                   <Text style={styles.brandSub}>Daily Recovery Report</Text>
                 </View>
               </View>
@@ -318,7 +318,7 @@ export function DailyReportCard({
               <View style={styles.footer}>
                 <View style={styles.footerDivider} />
                 <Text style={styles.footerText}>
-                  {todayLabel} · Finexa Orderbooker
+                  {todayLabel} · Finexa Recovery App
                 </Text>
               </View>
             </View>
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     paddingHorizontal: 24,
     paddingVertical: 14,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
     overflow: 'hidden',
     ...Shadow.lg,
   },
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
     paddingVertical: 16,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
   },
   shareBtnInnerDisabled: {
     backgroundColor: '#4B5563',

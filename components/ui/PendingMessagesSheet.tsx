@@ -120,7 +120,7 @@ export function PendingMessagesSheet({
       month: 'short',
       year: 'numeric',
     });
-    let msg = `Finexa Orderbooker - Recovery Update\n\n`
+    let msg = `Finexa Recovery App - Recovery Update\n\n`
       + `Dear ${item.shopName},\n\n`
       + `Your account has been updated:\n\n`
       + `Opening Balance: ${formatPKR(item.openingBalance)}\n`
@@ -131,7 +131,7 @@ export function PendingMessagesSheet({
       msg += `\nDistributor No: ${item.distributorPhone}\n`;
     }
     msg += `\nThank you for your payment!\n`
-      + `Finexa Orderbooker`;
+      + `Finexa Recovery App`;
     return msg;
   };
 
@@ -283,7 +283,7 @@ export function PendingMessagesSheet({
           </View>
 
           {/* ── 2. Company Name ── */}
-          <Text style={styles.receiptCompanyName}>{item.companyName || 'Finexa Orderbooker'}</Text>
+          <Text style={styles.receiptCompanyName}>{item.companyName || 'Finexa Recovery App'}</Text>
 
           {/* ── 3. Payment Receipt ── */}
           <Text style={styles.receiptPaymentLabel}>Payment Receipt</Text>
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     paddingHorizontal: 24,
     paddingVertical: 20,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
     overflow: 'hidden',
   },
   receiptSystemHeader: {

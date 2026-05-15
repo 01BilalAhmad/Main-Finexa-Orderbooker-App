@@ -54,7 +54,7 @@ export function BismillahSplash({ onFinish }: BismillahSplashProps) {
         </View>
 
         {/* App name */}
-        <Text style={styles.appName}>Finexa Orderbooker</Text>
+        <Text style={styles.appName}>Finexa Recovery App</Text>
       </Animated.View>
     </View>
   );
@@ -63,7 +63,7 @@ export function BismillahSplash({ onFinish }: BismillahSplashProps) {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,

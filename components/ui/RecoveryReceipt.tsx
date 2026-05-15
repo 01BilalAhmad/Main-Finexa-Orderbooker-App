@@ -305,7 +305,7 @@ export function RecoveryReceipt({
             </View>
 
             {/* ── 2. Company Name ── */}
-            <Text style={styles.receiptCompanyName}>{companyName || 'Finexa Orderbooker'}</Text>
+            <Text style={styles.receiptCompanyName}>{companyName || 'Finexa Recovery App'}</Text>
 
             {/* ── 3. Payment Receipt ── */}
             <Text style={styles.receiptPaymentLabel}>Payment Receipt</Text>
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     paddingHorizontal: 24,
     paddingVertical: 20,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
     overflow: 'hidden',
     ...Shadow.lg,
   },
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#4338CA',
   },
   resendBtnText: {
     fontSize: 14,

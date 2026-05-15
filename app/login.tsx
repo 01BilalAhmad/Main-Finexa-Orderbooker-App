@@ -15,6 +15,7 @@ import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/hooks/useAuth';
 import { useShops } from '@/hooks/useShops';
 import { useLock } from '@/hooks/useLock';
@@ -71,109 +72,125 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={['#4F46E5', '#3730A3', '#312E81']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: insets.top + Spacing.xl, paddingBottom: insets.bottom + Spacing.xl },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Logo */}
-        <View style={styles.logoArea}>
-          <View style={styles.logoCircle}>
-            <Image
-              source={require('@/assets/images/logo.png')}
-              style={styles.logo}
-              contentFit="contain"
-            />
-          </View>
-          <Text style={styles.appTitle}>Finexa</Text>
-          <Text style={styles.appSubtitle}>Orderbooker</Text>
-          <Text style={styles.appTagline}>Recovery Management Portal</Text>
-        </View>
-
-        {/* Login Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Welcome Back</Text>
-          <Text style={styles.cardSubtitle}>Sign in to continue</Text>
-
-          <Text style={styles.label}>Username</Text>
-          <View style={styles.inputRow}>
-            <MaterialIcons name="person" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Enter username"
-              placeholderTextColor={Colors.textMuted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="next"
-            />
-          </View>
-
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputRow}>
-            <MaterialIcons name="lock" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter password"
-              placeholderTextColor={Colors.textMuted}
-              secureTextEntry={!showPassword}
-              returnKeyType="done"
-              onSubmitEditing={handleLogin}
-            />
-            <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={12}>
-              <MaterialIcons
-                name={showPassword ? 'visibility-off' : 'visibility'}
-                size={20}
-                color={Colors.textSecondary}
+        <ScrollView
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingTop: insets.top + Spacing.xl, paddingBottom: insets.bottom + Spacing.xl },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo */}
+          <View style={styles.logoArea}>
+            <View style={styles.logoCircle}>
+              <Image
+                source={require('@/assets/images/logo.png')}
+                style={styles.logo}
+                contentFit="contain"
               />
+            </View>
+            <Text style={styles.appTitle}>Finexa</Text>
+            <Text style={styles.appSubtitle}>Recovery</Text>
+            <Text style={styles.appTagline}>Recovery Management Portal</Text>
+          </View>
+
+          {/* Login Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Welcome Back</Text>
+            <Text style={styles.cardSubtitle}>Sign in to continue</Text>
+
+            <Text style={styles.label}>Username</Text>
+            <View style={styles.inputRow}>
+              <MaterialIcons name="person" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={username}
+                onChangeText={setUsername}
+                placeholder="Enter username"
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+              />
+            </View>
+
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputRow}>
+              <MaterialIcons name="lock" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter password"
+                placeholderTextColor={Colors.textMuted}
+                secureTextEntry={!showPassword}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+              />
+              <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={12}>
+                <MaterialIcons
+                  name={showPassword ? 'visibility-off' : 'visibility'}
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+              </Pressable>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.loginBtn,
+                (isLoading || !username || !password) && styles.loginBtnDisabled,
+                pressed && !isLoading && styles.loginBtnPressed,
+              ]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              <LinearGradient
+                colors={['#4338CA', '#312E81']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.loginBtnInner}
+              >
+                {isLoading || syncingData ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    {syncingData ? <Text style={styles.loginBtnText}>Syncing data...</Text> : null}
+                  </>
+                ) : (
+                  <>
+                    <MaterialIcons name="login" size={20} color="#FFFFFF" />
+                    <Text style={styles.loginBtnText}>Sign In</Text>
+                  </>
+                )}
+              </LinearGradient>
             </Pressable>
           </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.loginBtn,
-              (isLoading || !username || !password) && styles.loginBtnDisabled,
-              pressed && !isLoading && styles.loginBtnPressed,
-            ]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading || syncingData ? (
-              <>
-                <ActivityIndicator size="small" color={Colors.textInverse} />
-                {syncingData ? <Text style={styles.loginBtnText}>Syncing data...</Text> : null}
-              </>
-            ) : (
-              <>
-                <MaterialIcons name="login" size={20} color={Colors.textInverse} />
-                <Text style={styles.loginBtnText}>Sign In</Text>
-              </>
-            )}
-          </Pressable>
-        </View>
-
-        <Text style={styles.footer}>
-          Finexa Orderbooker © 2025
-        </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <Text style={styles.footer}>
+            Finexa Recovery App © 2025
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
+  },
+  keyboardAvoid: {
+    flex: 1,
   },
   scroll: {
     flexGrow: 1,
@@ -187,10 +204,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
     ...Shadow.md,
   },
   logo: {
@@ -201,30 +220,28 @@ const styles = StyleSheet.create({
   appTitle: {
     fontSize: FontSize.xxxl,
     fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    color: '#FFFFFF',
     letterSpacing: 1,
   },
   appSubtitle: {
     fontSize: FontSize.lg,
-    color: Colors.primary,
+    color: '#E0E7FF',
     fontWeight: FontWeight.bold,
     marginTop: -2,
     letterSpacing: 0.5,
   },
   appTagline: {
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
+    color: 'rgba(255,255,255,0.8)',
     fontWeight: FontWeight.medium,
     marginTop: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 24,
     padding: Spacing.lg,
     ...Shadow.md,
     marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
   },
   cardTitle: {
     fontSize: FontSize.xl,
@@ -249,11 +266,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radius.sm,
+    borderColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 12,
     paddingHorizontal: Spacing.md,
     paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    backgroundColor: Colors.background,
+    backgroundColor: '#FFFFFF',
     marginBottom: Spacing.md,
   },
   inputIcon: {
@@ -265,26 +282,28 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   loginBtn: {
+    borderRadius: Radius.md,
+    marginTop: Spacing.sm,
+    overflow: 'hidden',
+  },
+  loginBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.md,
     paddingVertical: 15,
-    marginTop: Spacing.sm,
   },
-  loginBtnDisabled: { backgroundColor: Colors.textMuted },
+  loginBtnDisabled: { opacity: 0.5 },
   loginBtnPressed: { opacity: 0.85 },
   loginBtnText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
-    color: Colors.textInverse,
+    color: '#FFFFFF',
   },
   footer: {
     textAlign: 'center',
     fontSize: FontSize.xs,
-    color: Colors.textMuted,
+    color: 'rgba(255,255,255,0.6)',
     marginTop: Spacing.md,
   },
 });

@@ -1,4 +1,4 @@
-// Finexa Orderbooker - Phone Input Modal
+// Finexa Recovery App - Phone Input Modal
 // Shows when a shop has no phone number saved after recovery submission
 // Also allows adding/editing the shop owner's name
 import React, { useState, useEffect, useRef } from 'react';

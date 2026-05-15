@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1F2937',
   },
   syncingBanner: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4F46E5',
   },
   successBanner: {
     backgroundColor: Colors.primary,

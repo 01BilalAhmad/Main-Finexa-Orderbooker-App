@@ -1,4 +1,4 @@
-// Finexa Orderbooker
+// Finexa Recovery App
 import React, { memo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Linking, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -235,14 +235,14 @@ const styles = StyleSheet.create({
   },
   // Recovery submitted - blue accent card
   cardRecoverySubmitted: {
-    borderColor: '#2563EB',
+    borderColor: '#4F46E5',
     borderWidth: 1.5,
-    backgroundColor: '#F0F7FF',
+    backgroundColor: '#EEF2FF',
   },
   cardVisited: {
     borderColor: Colors.primary,
     borderWidth: 1.5,
-    backgroundColor: '#FAFBFF',
+    backgroundColor: '#F5F3FF',
   },
   cardZeroBalance: {
     opacity: 0.75,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 5,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4F46E5',
     borderTopLeftRadius: Radius.lg,
     borderBottomLeftRadius: Radius.lg,
   },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   shopAvatarRecovery: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4F46E5',
   },
   shopAvatarVisited: {
     backgroundColor: Colors.primary,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4F46E5',
     borderRadius: Radius.full,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4F46E5',
     borderRadius: Radius.sm,
     paddingVertical: 10,
     paddingHorizontal: Spacing.sm,

@@ -1,5 +1,5 @@
 // Powered by Finexa
-// Offline-First Sync Engine for Finexa Orderbooker
+// Offline-First Sync Engine for Finexa Recovery App
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { StorageService, OfflineRecovery } from './storage';
 import { ApiService } from './api';

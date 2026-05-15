@@ -1,8 +1,8 @@
-// Finexa Orderbooker — Professional Blue Theme
+// Finexa Recovery App — Modern Indigo Theme
 export const Colors = {
-  primary: '#2563EB',
-  primaryLight: '#DBEAFE',
-  primaryDark: '#1D4ED8',
+  primary: '#4F46E5',
+  primaryLight: '#EEF2FF',
+  primaryDark: '#3730A3',
   secondary: '#F59E0B',
   secondaryLight: '#FEF3C7',
   danger: '#EF4444',
@@ -25,12 +25,12 @@ export const Colors = {
 
   tabBar: '#FFFFFF',
   tabBarBorder: '#E2E8F0',
-  tabActive: '#2563EB',
+  tabActive: '#4F46E5',
   tabInactive: '#94A3B8',
 
   // Extended palette
-  blue: '#2563EB',
-  blueLight: '#EFF6FF',
+  blue: '#4F46E5',
+  blueLight: '#EEF2FF',
   purple: '#7C3AED',
   purpleLight: '#F5F3FF',
   orange: '#EA580C',

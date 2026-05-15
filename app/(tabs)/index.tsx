@@ -1,4 +1,4 @@
-// Finexa Orderbooker
+// Finexa Recovery App
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
@@ -814,7 +814,7 @@ export default function TodayRouteScreen() {
             <View>
               {/* Hero Card - All Routes */}
               <LinearGradient
-                colors={['#2563EB', '#1E40AF']}
+                colors={['#4F46E5', '#3730A3']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -1104,7 +1104,7 @@ export default function TodayRouteScreen() {
             <View>
               {/* Hero Card - Normal */}
               <LinearGradient
-                colors={['#2563EB', '#1E40AF']}
+                colors={['#4F46E5', '#3730A3']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}

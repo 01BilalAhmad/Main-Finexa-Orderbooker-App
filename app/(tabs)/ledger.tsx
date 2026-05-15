@@ -132,7 +132,7 @@ const txnStyles = StyleSheet.create({
     overflow: 'hidden',
     ...Shadow.sm,
   },
-  typeBar: { width: 4 },
+  typeBar: { width: 4, borderTopRightRadius: 4, borderBottomRightRadius: 4 },
   body: { flex: 1, padding: Spacing.sm },
   topRow: {
     flexDirection: 'row',
@@ -240,7 +240,7 @@ export default function LedgerScreen() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {/* Gradient header */}
       <LinearGradient
-        colors={['#2563EB', '#1E40AF']}
+        colors={['#4F46E5', '#3730A3']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     margin: Spacing.md,
     marginTop: -Spacing.sm,
-    borderRadius: Radius.md,
+    borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: 14,
     ...Shadow.md,
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   },
   txnHeaderTitle: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.text },
   txnCountBadge: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#4F46E5',
     borderRadius: Radius.full,
     minWidth: 24,
     height: 24,

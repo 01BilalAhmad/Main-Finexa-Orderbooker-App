@@ -81,7 +81,7 @@ const pulseStyles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+    backgroundColor: 'rgba(79, 70, 229, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -89,7 +89,7 @@ const pulseStyles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(37, 99, 235, 0.3)',
+    backgroundColor: 'rgba(79, 70, 229, 0.3)',
   },
 });
 
@@ -100,7 +100,7 @@ function ConfettiOverlay({ visible }: { visible: boolean }) {
       id: i,
       x: Math.random() * SCREEN_WIDTH,
       delay: Math.random() * 300,
-      color: ['#2563EB', '#F59E0B', '#EF4444', '#10B981', '#7C3AED'][i % 5],
+      color: ['#4F46E5', '#F59E0B', '#EF4444', '#10B981', '#7C3AED'][i % 5],
       size: 4 + Math.random() * 6,
       rotation: Math.random() * 360,
     }))
@@ -161,7 +161,7 @@ function SuccessCheckmark({ visible }: { visible: boolean }) {
 
   return (
     <Animated.View style={[successStyles.container, { opacity: opacityAnim, transform: [{ scale: scaleAnim }] }]}>
-      <LinearGradient colors={['#2563EB', '#1D4ED8']} style={successStyles.badge}>
+      <LinearGradient colors={['#4F46E5', '#4338CA']} style={successStyles.badge}>
         <MaterialIcons name="check" size={28} color="#FFFFFF" />
       </LinearGradient>
     </Animated.View>
@@ -425,7 +425,7 @@ export function RecoveryBottomSheet({
 
           {/* Modern gradient header */}
           <LinearGradient
-            colors={['#2563EB', '#1D4ED8', '#1E40AF']}
+            colors={['#4F46E5', '#4338CA', '#3730A3']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
@@ -573,7 +573,7 @@ export function RecoveryBottomSheet({
             {numericAmount > 0 && numericAmount <= displayBalance ? (
               <View style={styles.balancePreviewCard}>
                 <LinearGradient
-                  colors={['#EFF6FF', '#DBEAFE']}
+                  colors={['#EEF2FF', '#EEF2FF']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.balancePreviewGradient}
@@ -657,7 +657,7 @@ export function RecoveryBottomSheet({
                     <MaterialIcons
                       name={markGpsVisit ? 'storefront' : 'storefront'}
                       size={22}
-                      color={markGpsVisit ? '#2563EB' : Colors.textMuted}
+                      color={markGpsVisit ? '#4F46E5' : Colors.textMuted}
                     />
                   </View>
                   <View style={styles.gpsVisitTextWrap}>
@@ -702,8 +702,8 @@ export function RecoveryBottomSheet({
             {/* GPS section - Modern card style */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <View style={[styles.sectionIcon, { backgroundColor: '#DBEAFE' }]}>
-                  <MaterialIcons name="my-location" size={16} color="#2563EB" />
+                <View style={[styles.sectionIcon, { backgroundColor: '#EEF2FF' }]}>
+                  <MaterialIcons name="my-location" size={16} color="#4F46E5" />
                 </View>
                 <Text style={styles.sectionTitle}>GPS Location</Text>
                 <View style={styles.optionalBadge}>
@@ -798,9 +798,9 @@ export function RecoveryBottomSheet({
                   <View style={styles.captureBtnInner}>
                     <View style={styles.captureBtnIconWrap}>
                       {capturingGps ? (
-                        <ActivityIndicator size="small" color="#2563EB" />
+                        <ActivityIndicator size="small" color="#4F46E5" />
                       ) : (
-                        <MaterialIcons name="add-location-alt" size={22} color="#2563EB" />
+                        <MaterialIcons name="add-location-alt" size={22} color="#4F46E5" />
                       )}
                     </View>
                     <View style={styles.captureBtnTextWrap}>
@@ -837,7 +837,7 @@ export function RecoveryBottomSheet({
 
             {showSuccess ? (
               <View style={styles.successFooter}>
-                <LinearGradient colors={['#2563EB', '#1D4ED8']} style={styles.successFooterInner}>
+                <LinearGradient colors={['#4F46E5', '#4338CA']} style={styles.successFooterInner}>
                   <MaterialIcons name="check-circle" size={24} color="#FFFFFF" />
                   <Text style={styles.successFooterText}>Recovery Submitted Successfully!</Text>
                 </LinearGradient>
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    backgroundColor: 'rgba(79, 70, 229, 0.1)',
     borderRadius: Radius.full,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1473,7 +1473,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#EEF2FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1509,7 +1509,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderRadius: Radius.md,
     padding: Spacing.md,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#EEF2FF',
   },
   amountPreviewLabel: {
     fontSize: FontSize.sm,

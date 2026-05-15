@@ -1,7 +1,7 @@
 // Powered by Finexa
 export const API_BASE_URL = 'https://alfalah-traders-v2.vercel.app';
 
-// Working days for Finexa Orderbooker (Pakistan schedule)
+// Working days for Finexa Recovery App (Pakistan schedule)
 // Friday is the weekly off day. Saturday through Thursday are working days.
 export const ROUTE_DAYS = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
 
