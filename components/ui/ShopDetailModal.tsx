@@ -36,6 +36,7 @@ interface ShopDetailModalProps {
   onCollect: () => void;
   hasRecoveryToday?: boolean; // Whether recovery was submitted for this shop today
   onResendReceipt?: () => void; // Callback to resend receipt
+  onEditPendingRecovery?: (txn: Transaction) => void; // Callback to edit a pending recovery
 }
 
 export const ShopDetailModal = memo(function ShopDetailModal({
@@ -46,6 +47,7 @@ export const ShopDetailModal = memo(function ShopDetailModal({
   onCollect,
   hasRecoveryToday,
   onResendReceipt,
+  onEditPendingRecovery,
 }: ShopDetailModalProps) {
   const [recentTxns, setRecentTxns] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -573,6 +575,17 @@ export const ShopDetailModal = memo(function ShopDetailModal({
                       {formatPKR(txn.amount)}
                     </Text>
                     <Text style={styles.txnBalAfter}>{formatPKR(txn.newBalance)}</Text>
+                    {/* Edit button for pending recoveries only — approved recoveries cannot be edited */}
+                    {txn.type === 'recovery' && txn.status === 'pending' && onEditPendingRecovery ? (
+                      <Pressable
+                        style={styles.txnEditBtn}
+                        onPress={() => onEditPendingRecovery(txn)}
+                        hitSlop={6}
+                      >
+                        <MaterialIcons name="edit" size={14} color="#4F46E5" />
+                        <Text style={styles.txnEditBtnText}>Edit</Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 </View>
               ))
@@ -1015,6 +1028,7 @@ const styles = StyleSheet.create({
   },
   txnAmountCol: {
     alignItems: 'flex-end',
+    gap: 2,
   },
   txnAmount: {
     fontSize: FontSize.base,
@@ -1024,6 +1038,21 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textMuted,
     marginTop: 1,
+  },
+  txnEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#EEF2FF',
+    borderRadius: Radius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    marginTop: 2,
+  },
+  txnEditBtnText: {
+    fontSize: FontSize.xs,
+    color: '#4F46E5',
+    fontWeight: FontWeight.semibold,
   },
   emptyTxnWrap: {
     alignItems: 'center',

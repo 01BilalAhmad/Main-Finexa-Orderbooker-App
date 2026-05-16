@@ -18,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
 import { useShops } from '@/hooks/useShops';
-import { ApiService, Shop } from '@/services/api';
+import { ApiService, Shop, Transaction } from '@/services/api';
 import { getShopDisplayBalance } from '@/components/ui/ShopCard';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
 import { ROUTE_DAYS, DAY_LABELS } from '@/constants/config';
@@ -40,6 +40,7 @@ import { DailyTargetProgress } from '@/components/ui/DailyTargetProgress';
 import { StorageService, PendingNotification, OfflineRecovery } from '@/services/storage';
 import { RecoveryReminder } from '@/components/ui/RecoveryReminder';
 import { RecoveryReceipt } from '@/components/ui/RecoveryReceipt';
+import { EditRecoveryModal, EditedRecoveryReceiptData } from '@/components/ui/EditRecoveryModal';
 import { AppTour } from '@/components/ui/AppTour';
 import { PhoneInputModal } from '@/components/ui/PhoneInputModal';
 import { CompanySelector } from '@/components/ui/CompanySelector';
@@ -125,6 +126,9 @@ export default function TodayRouteScreen() {
     distributorPhone?: string;
   } | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+  // Edit pending recovery state
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Load cached todayRecovery on mount so it doesn't show 0 after refresh
   useEffect(() => {
@@ -1423,6 +1427,10 @@ export default function TodayRouteScreen() {
             Alert.alert('No Receipt', 'No receipt data available for this shop. Receipts are only available for the most recent recovery.');
           }
         }}
+        onEditPendingRecovery={(txn) => {
+          // Open edit recovery modal
+          setEditingTransaction(txn);
+        }}
       />
 
       {/* Phone Input Modal - shows when shop has no phone after recovery */}
@@ -1447,6 +1455,46 @@ export default function TodayRouteScreen() {
         orderbookerName={lastReceiptData?.orderbookerName}
         distributorPhone={lastReceiptData?.distributorPhone}
         onClose={() => setShowReceiptModal(false)}
+      />
+
+      {/* Edit Pending Recovery Modal — only pending recoveries can be edited */}
+      <EditRecoveryModal
+        visible={editingTransaction !== null}
+        transaction={editingTransaction}
+        userId={user?.id || ''}
+        companyName={selectedCompanyName}
+        orderbookerName={user?.name}
+        shopPhone={editingTransaction?.shop ? (allShops.find(s => s.id === editingTransaction.shopId)?.phone || '') : ''}
+        shopAddress={editingTransaction?.shop ? (allShops.find(s => s.id === editingTransaction.shopId)?.address || allShops.find(s => s.id === editingTransaction.shopId)?.area || undefined) : undefined}
+        shopOwnerName={editingTransaction?.shop ? (allShops.find(s => s.id === editingTransaction.shopId)?.ownerName || undefined) : undefined}
+        onClose={() => setEditingTransaction(null)}
+        onUpdated={(receiptData?: EditedRecoveryReceiptData) => {
+          // Refresh shop detail after edit
+          setDetailShop(null);
+          // Refresh shops data
+          if (user) {
+            loadTodayShops(user.id, allRoutesEnabled, selectedCompanyId || user.companyId || undefined);
+          }
+          // If receipt data returned, show updated receipt for regeneration
+          if (receiptData) {
+            setLastReceiptData({
+              shopName: receiptData.shopName,
+              shopAddress: receiptData.shopAddress,
+              shopOwnerName: receiptData.shopOwnerName,
+              shopPhone: receiptData.shopPhone,
+              openingBalance: receiptData.openingBalance,
+              recoveryAmount: receiptData.recoveryAmount,
+              remainingBalance: receiptData.remainingBalance,
+              companyName: selectedCompanyName || undefined,
+              orderbookerName: user?.name || undefined,
+              distributorPhone: distributorPhone || undefined,
+            });
+            // Auto-show receipt after a short delay so modal closes first
+            setTimeout(() => {
+              setShowReceiptModal(true);
+            }, 500);
+          }
+        }}
       />
 
       <SuccessOverlay

@@ -260,6 +260,12 @@ export const ApiService = {
       method: 'DELETE',
     }),
 
+  editPendingRecovery: (transactionId: string, payload: { amount: number; description?: string; updatedBy: string }) =>
+    request<{ id: string; amount: number; message: string }>('/api/transactions/edit-pending', {
+      method: 'PATCH',
+      body: JSON.stringify({ id: transactionId, ...payload }),
+    }),
+
   updateTransactionGps: (transactionId: string, payload: { gpsLat: number; gpsLng: number; gpsAddress?: string }) =>
     request<{ success: boolean }>(`/api/transactions/${transactionId}`, {
       method: 'PATCH',
