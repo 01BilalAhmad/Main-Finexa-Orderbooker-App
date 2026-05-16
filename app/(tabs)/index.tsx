@@ -263,6 +263,43 @@ export default function TodayRouteScreen() {
       if (res.companyBreakdown && res.companyBreakdown.length > 0) {
         setCompanyRecoveryBreakdown(res.companyBreakdown);
       }
+
+      // ── Sync recoverySubmittedShopIds with server ──────────────────────────
+      // If admin rejected a recovery, remove that shop from the submitted set
+      // so the orderbooker can re-add recovery for that shop
+      if (recoverySubmittedShopIds.size > 0) {
+        try {
+          const todayTxns = await ApiService.getTransactions({
+            createdBy: user.id,
+            type: 'recovery',
+            date: getTodayDateStr(),
+            limit: 500,
+          });
+          // For each shop in recoverySubmittedShopIds, check if ALL today's recoveries are rejected
+          const shopsToRemove: string[] = [];
+          for (const shopId of recoverySubmittedShopIds) {
+            const shopTxns = todayTxns.transactions.filter((t) => t.shopId === shopId);
+            // Only remove if we found transactions AND all of them are rejected
+            // (if no transactions found, don't remove — might be offline/not synced yet)
+            if (shopTxns.length > 0 && shopTxns.every((t) => t.status === 'rejected')) {
+              shopsToRemove.push(shopId);
+            }
+          }
+          if (shopsToRemove.length > 0) {
+            console.log('[loadTodayStats] Removing shops with only rejected recoveries:', shopsToRemove);
+            setRecoverySubmittedShopIds((prev) => {
+              const next = new Set(prev);
+              for (const id of shopsToRemove) {
+                next.delete(id);
+                StorageService.removeRecoverySubmittedShop(id);
+              }
+              return next;
+            });
+          }
+        } catch (e) {
+          console.warn('[loadTodayStats] Failed to sync recovery rejection statuses:', e);
+        }
+      }
       // If myEntry not found, don't reset — keep cached value
     } catch {
       // API failed — keep cached value, don't reset to 0
