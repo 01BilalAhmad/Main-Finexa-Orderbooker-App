@@ -39,6 +39,7 @@ import { PendingMessagesSheet } from '@/components/ui/PendingMessagesSheet';
 import { DailyTargetProgress } from '@/components/ui/DailyTargetProgress';
 import { StorageService, PendingNotification, OfflineRecovery } from '@/services/storage';
 import { RecoveryReminder } from '@/components/ui/RecoveryReminder';
+import { RecoveryReceipt } from '@/components/ui/RecoveryReceipt';
 import { AppTour } from '@/components/ui/AppTour';
 import { PhoneInputModal } from '@/components/ui/PhoneInputModal';
 import { CompanySelector } from '@/components/ui/CompanySelector';
@@ -109,6 +110,21 @@ export default function TodayRouteScreen() {
     orderbookerName?: string;
     distributorPhone?: string;
   } | null>(null);
+
+  // Receipt regeneration state — persists receipt data so it can be reopened anytime
+  const [lastReceiptData, setLastReceiptData] = useState<{
+    shopName: string;
+    shopAddress?: string;
+    shopOwnerName?: string;
+    shopPhone: string;
+    openingBalance: number;
+    recoveryAmount: number;
+    remainingBalance: number;
+    companyName?: string;
+    orderbookerName?: string;
+    distributorPhone?: string;
+  } | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   // Load cached todayRecovery on mount so it doesn't show 0 after refresh
   useEffect(() => {
@@ -372,6 +388,20 @@ export default function TodayRouteScreen() {
             distributorPhone: distributorPhone || undefined,
           });
 
+          // Save receipt data for regeneration — persists so receipt can be reopened anytime
+          setLastReceiptData({
+            shopName,
+            shopAddress: recoveryShop.address || recoveryShop.area || undefined,
+            shopOwnerName: recoveryShop.ownerName || undefined,
+            shopPhone,
+            openingBalance,
+            recoveryAmount: payload.amount,
+            remainingBalance,
+            companyName: selectedCompanyName || undefined,
+            orderbookerName: user.name || undefined,
+            distributorPhone: distributorPhone || undefined,
+          });
+
           // Fallback timeout in case SuccessOverlay doesn't dismiss properly
           // This ensures the SMS popup always shows even if overlay has issues
           setTimeout(() => {
@@ -463,6 +493,20 @@ export default function TodayRouteScreen() {
             shopName,
             shopAddress: recoveryShop.address || recoveryShop.area || undefined,
             shopOwnerName: recoveryShop.ownerName || undefined,
+            openingBalance,
+            recoveryAmount: payload.amount,
+            remainingBalance,
+            companyName: selectedCompanyName || undefined,
+            orderbookerName: user.name || undefined,
+            distributorPhone: distributorPhone || undefined,
+          });
+
+          // Save receipt data for regeneration — persists so receipt can be reopened anytime
+          setLastReceiptData({
+            shopName,
+            shopAddress: recoveryShop.address || recoveryShop.area || undefined,
+            shopOwnerName: recoveryShop.ownerName || undefined,
+            shopPhone,
             openingBalance,
             recoveryAmount: payload.amount,
             remainingBalance,
@@ -1372,25 +1416,12 @@ export default function TodayRouteScreen() {
         }}
         hasRecoveryToday={detailShop ? recoverySubmittedShopIds.has(detailShop.id) : false}
         onResendReceipt={() => {
-          if (!detailShop || !detailShop.phone) {
-            Alert.alert('No Phone Number', 'This shop has no phone number for WhatsApp.');
-            return;
+          // Show the receipt modal again for regeneration
+          if (lastReceiptData) {
+            setShowReceiptModal(true);
+          } else {
+            Alert.alert('No Receipt', 'No receipt data available for this shop. Receipts are only available for the most recent recovery.');
           }
-          // Open WhatsApp chat directly to resend receipt from gallery
-          let formattedPhone = detailShop.phone.trim().replace(/[^0-9]/g, '');
-          if (formattedPhone.startsWith('0')) formattedPhone = formattedPhone.substring(1);
-          if (!formattedPhone.startsWith('92')) formattedPhone = '92' + formattedPhone;
-          formattedPhone = formattedPhone.replace(/[^0-9]/g, '');
-          const whatsappUrl = `https://wa.me/${formattedPhone}`;
-          Linking.openURL(whatsappUrl).then(() => {
-            Alert.alert(
-              'WhatsApp Opened',
-              `WhatsApp chat opened for ${detailShop.name}.\n\nTap attachment → Gallery → "AlFalah Receipts" → Select receipt → Send`,
-              [{ text: 'OK' }]
-            );
-          }).catch(() => {
-            Alert.alert('WhatsApp Not Available', 'Please install WhatsApp.');
-          });
         }}
       />
 
@@ -1400,6 +1431,22 @@ export default function TodayRouteScreen() {
         shop={phoneInputShop}
         onPhoneSaved={handlePhoneSaved}
         onSkip={() => setPhoneInputShop(null)}
+      />
+
+      {/* Receipt Regeneration Modal — can be reopened anytime */}
+      <RecoveryReceipt
+        visible={showReceiptModal && lastReceiptData !== null}
+        shopName={lastReceiptData?.shopName || ''}
+        shopAddress={lastReceiptData?.shopAddress}
+        shopOwnerName={lastReceiptData?.shopOwnerName}
+        shopPhone={lastReceiptData?.shopPhone || ''}
+        openingBalance={lastReceiptData?.openingBalance || 0}
+        recoveryAmount={lastReceiptData?.recoveryAmount || 0}
+        remainingBalance={lastReceiptData?.remainingBalance || 0}
+        companyName={lastReceiptData?.companyName}
+        orderbookerName={lastReceiptData?.orderbookerName}
+        distributorPhone={lastReceiptData?.distributorPhone}
+        onClose={() => setShowReceiptModal(false)}
       />
 
       <SuccessOverlay
