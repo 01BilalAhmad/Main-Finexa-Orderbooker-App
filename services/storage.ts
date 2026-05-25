@@ -52,6 +52,7 @@ export interface OfflineRecovery {
   gpsAddress?: string;
   createdBy: string;
   createdAt: string;
+  companyId?: string; // Capture company at creation time, not at sync time
 }
 
 export interface ShopLastRecovery {

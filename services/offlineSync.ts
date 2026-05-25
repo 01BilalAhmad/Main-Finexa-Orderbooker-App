@@ -97,14 +97,19 @@ export async function syncOfflineRecoveries(): Promise<SyncResult> {
     // One-by-one is primary — most reliable since we don't have previousBalance for batch
     for (const item of queue) {
       try {
-        // Get companyId from stored user for multi-company support
+        // Get companyId: prefer the one captured at creation time (item.companyId)
+        // Fall back to currently selected company, then user's primary company
         let companyId: string | undefined;
-        try {
-          const user = await StorageService.getUser();
-          // Prefer selectedCompanyId from storage, fall back to user.companyId
-          const selectedCompanyId = await StorageService.getSelectedCompanyId();
-          companyId = selectedCompanyId || user?.companyId || undefined;
-        } catch {}
+        if (item.companyId) {
+          // Use the company that was selected when the recovery was created
+          companyId = item.companyId;
+        } else {
+          try {
+            const user = await StorageService.getUser();
+            const selectedCompanyId = await StorageService.getSelectedCompanyId();
+            companyId = selectedCompanyId || user?.companyId || undefined;
+          } catch {}
+        }
 
         await ApiService.submitRecovery({
           shopId: item.shopId,

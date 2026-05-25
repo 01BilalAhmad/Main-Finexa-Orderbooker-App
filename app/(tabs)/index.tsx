@@ -484,6 +484,7 @@ export default function TodayRouteScreen() {
           gpsAddress: payload.gpsAddress,
           createdBy: user.id,
           createdAt: new Date().toISOString(),
+          companyId: selectedCompanyId || user.companyId || undefined,
         });
         if (payload.markGpsVisit) {
           setVisitedShopIds((prev) => new Set([...prev, shopId]));
