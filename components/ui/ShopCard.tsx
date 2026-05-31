@@ -8,6 +8,9 @@ import { Shop, CompanyBalance } from '@/services/api';
 import { formatPKR } from '@/utils/format';
 
 // Helper: get display balance for a shop based on the user's assigned company
+// Returns company-specific balance when companyId is provided and companyBalances exists.
+// If companyBalances exists but the specific company isn't found, returns 0 (not total balance)
+// to avoid showing wrong balance for multi-company setups.
 export function getShopDisplayBalance(shop: Shop, companyId?: string): { balance: number; creditLimit: number } {
   try {
     if (companyId && shop.companyBalances && Array.isArray(shop.companyBalances) && shop.companyBalances.length > 0) {
@@ -15,7 +18,11 @@ export function getShopDisplayBalance(shop: Shop, companyId?: string): { balance
       if (companyBal && typeof companyBal.balance === 'number') {
         return { balance: companyBal.balance, creditLimit: companyBal.creditLimit || shop.creditLimit || 0 };
       }
+      // companyBalances exists but this company not found — return 0, NOT total balance
+      // This prevents showing wrong (total) balance for multi-company shops
+      return { balance: 0, creditLimit: 0 };
     }
+    // No companyBalances or no companyId — use shop's top-level balance (single-company / legacy)
     return { balance: shop.balance || 0, creditLimit: shop.creditLimit || 0 };
   } catch {
     return { balance: shop.balance || 0, creditLimit: shop.creditLimit || 0 };

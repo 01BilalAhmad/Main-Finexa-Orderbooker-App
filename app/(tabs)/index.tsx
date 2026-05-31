@@ -97,6 +97,19 @@ export default function TodayRouteScreen() {
   const [visitedShopIds, setVisitedShopIds] = useState<Set<string>>(new Set());
   const [todayRecovery, setTodayRecovery] = useState(0);
   const [recoverySubmittedShopIds, setRecoverySubmittedShopIds] = useState<Set<string>>(new Set());
+
+  // Helper: create a composite key for recovery tracking (shopId_companyId)
+  // If companyId exists, use "shopId_companyId" format for per-company tracking
+  // If no companyId (legacy/single-company users), use just "shopId" for backward compatibility
+  const getRecoveryKey = useCallback((shopId: string, companyId?: string | null): string => {
+    if (companyId) return `${shopId}_${companyId}`;
+    return shopId;
+  }, []);
+
+  // Helper: check if recovery was submitted for a shop under a specific company
+  const isRecoverySubmitted = useCallback((shopId: string, companyId?: string | null): boolean => {
+    return recoverySubmittedShopIds.has(getRecoveryKey(shopId, companyId));
+  }, [recoverySubmittedShopIds, getRecoveryKey]);
   const [phoneInputShop, setPhoneInputShop] = useState<Shop | null>(null);
   const [pendingNotifAfterSuccess, setPendingNotifAfterSuccess] = useState<{
     shopId: string;
@@ -165,6 +178,7 @@ export default function TodayRouteScreen() {
     isOffline: boolean;
     transactionId?: string;
     localId?: string;
+    companyId?: string;
   } | null>(null);
 
   // Feature 14: Tour state
@@ -265,8 +279,8 @@ export default function TodayRouteScreen() {
       }
 
       // ── Sync recoverySubmittedShopIds with server ──────────────────────────
-      // If admin rejected a recovery, remove that shop from the submitted set
-      // so the orderbooker can re-add recovery for that shop
+      // If admin rejected a recovery, remove that shop+company from the submitted set
+      // so the orderbooker can re-add recovery for that shop under that company
       if (recoverySubmittedShopIds.size > 0) {
         try {
           const todayTxns = await ApiService.getTransactions({
@@ -275,21 +289,40 @@ export default function TodayRouteScreen() {
             date: getTodayDateStr(),
             limit: 500,
           });
-          // For each shop in recoverySubmittedShopIds, check if ALL today's recoveries are rejected
-          const shopsToRemove: string[] = [];
-          for (const shopId of recoverySubmittedShopIds) {
-            const shopTxns = todayTxns.transactions.filter((t) => t.shopId === shopId);
+          // For each recovery key in recoverySubmittedShopIds, check if ALL today's recoveries for that
+          // shopId+companyId combo are rejected
+          const keysToRemove: string[] = [];
+          for (const key of recoverySubmittedShopIds) {
+            // Parse key: could be "shopId" or "shopId_companyId"
+            const lastUnderscore = key.lastIndexOf('_');
+            // Check if the part after last underscore looks like a companyId (cuid format: 25+ chars)
+            let shopId: string;
+            let companyId: string | undefined;
+            if (lastUnderscore > 0 && key.length - lastUnderscore - 1 > 20) {
+              // Likely a "shopId_companyId" composite key
+              shopId = key.substring(0, lastUnderscore);
+              companyId = key.substring(lastUnderscore + 1);
+            } else {
+              // Legacy "shopId" only key
+              shopId = key;
+            }
+            // Filter transactions for this shopId AND companyId (if applicable)
+            const shopTxns = todayTxns.transactions.filter((t) => {
+              if (t.shopId !== shopId) return false;
+              if (companyId && t.companyId && t.companyId !== companyId) return false;
+              return true;
+            });
             // Only remove if we found transactions AND all of them are rejected
             // (if no transactions found, don't remove — might be offline/not synced yet)
             if (shopTxns.length > 0 && shopTxns.every((t) => t.status === 'rejected')) {
-              shopsToRemove.push(shopId);
+              keysToRemove.push(key);
             }
           }
-          if (shopsToRemove.length > 0) {
-            console.log('[loadTodayStats] Removing shops with only rejected recoveries:', shopsToRemove);
+          if (keysToRemove.length > 0) {
+            console.log('[loadTodayStats] Removing shop+company keys with only rejected recoveries:', keysToRemove);
             setRecoverySubmittedShopIds((prev) => {
               const next = new Set(prev);
-              for (const id of shopsToRemove) {
+              for (const id of keysToRemove) {
                 next.delete(id);
                 StorageService.removeRecoverySubmittedShop(id);
               }
@@ -336,9 +369,11 @@ export default function TodayRouteScreen() {
     outOfRange?: boolean;
   }) => {
     if (!recoveryShop || !user) return;
-    // Duplicate recovery prevention - check if recovery already submitted for this shop today
-    if (recoverySubmittedShopIds.has(recoveryShop.id)) {
-      Alert.alert('Already Recovered', `Recovery for ${recoveryShop.name} has already been submitted today. You cannot submit duplicate recovery.`);
+    // Duplicate recovery prevention - check if recovery already submitted for this shop+company today
+    const currentCompanyId = selectedCompanyId || user?.companyId;
+    if (isRecoverySubmitted(recoveryShop.id, currentCompanyId)) {
+      const companyName = currentCompanyId ? ` under this company` : '';
+      Alert.alert('Already Recovered', `Recovery for ${recoveryShop.name}${companyName} has already been submitted today. You cannot submit duplicate recovery.`);
       return;
     }
     setIsSubmitting(true);
@@ -365,9 +400,10 @@ export default function TodayRouteScreen() {
         });
         setVisitedShopIds((prev) => new Set([...prev, shopId]));
         StorageService.addVisitedShop(shopId);
-        // Mark shop as recovery submitted (duplicate prevention)
-        setRecoverySubmittedShopIds((prev) => new Set([...prev, shopId]));
-        StorageService.addRecoverySubmittedShop(shopId);
+        // Mark shop+company as recovery submitted (duplicate prevention)
+        const recoveryKey = getRecoveryKey(shopId, currentCompanyId);
+        setRecoverySubmittedShopIds((prev) => new Set([...prev, recoveryKey]));
+        StorageService.addRecoverySubmittedShop(recoveryKey);
         setTodayRecovery((prev) => {
           const newTotal = prev + payload.amount;
           StorageService.saveTodayRecovery(newTotal);
@@ -388,7 +424,7 @@ export default function TodayRouteScreen() {
           }
         }
         // Feature 12: Track last recovery for undo
-        setLastRecoveryInfo({ shopId, amount: payload.amount, isOffline: false, transactionId: result.id });
+        setLastRecoveryInfo({ shopId, amount: payload.amount, isOffline: false, transactionId: result.id, companyId: currentCompanyId });
         // Feature 13: Update last recovery date
         StorageService.updateLastRecoveryDate(shopId, new Date().toISOString());
         setSuccessState({ visible: true, shopName, amount: payload.amount, isOffline: false });
@@ -490,9 +526,10 @@ export default function TodayRouteScreen() {
           setVisitedShopIds((prev) => new Set([...prev, shopId]));
           StorageService.addVisitedShop(shopId);
         }
-        // Mark shop as recovery submitted (duplicate prevention) for offline too
-        setRecoverySubmittedShopIds((prev) => new Set([...prev, shopId]));
-        StorageService.addRecoverySubmittedShop(shopId);
+        // Mark shop+company as recovery submitted (duplicate prevention) for offline too
+        const offlineRecoveryKey = getRecoveryKey(shopId, currentCompanyId);
+        setRecoverySubmittedShopIds((prev) => new Set([...prev, offlineRecoveryKey]));
+        StorageService.addRecoverySubmittedShop(offlineRecoveryKey);
         // Increment todayRecovery for offline recoveries too
         setTodayRecovery((prev) => {
           const newTotal = prev + payload.amount;
@@ -500,7 +537,7 @@ export default function TodayRouteScreen() {
           return newTotal;
         });
         // Feature 12: Track last offline recovery for undo
-        setLastRecoveryInfo({ shopId, amount: payload.amount, isOffline: true, localId });
+        setLastRecoveryInfo({ shopId, amount: payload.amount, isOffline: true, localId, companyId: currentCompanyId });
         // Feature 13: Update last recovery date
         StorageService.updateLastRecoveryDate(shopId, new Date().toISOString());
         setSuccessState({ visible: true, shopName, amount: payload.amount, isOffline: true });
@@ -660,8 +697,9 @@ export default function TodayRouteScreen() {
       // Remove from recovery submitted (undo means no longer submitted)
       setRecoverySubmittedShopIds((prev) => {
         const next = new Set(prev);
-        next.delete(shopId);
-        StorageService.removeRecoverySubmittedShop(shopId);
+        const undoKey = getRecoveryKey(shopId, lastRecoveryInfo.companyId);
+        next.delete(undoKey);
+        StorageService.removeRecoverySubmittedShop(undoKey);
         return next;
       });
 
@@ -756,14 +794,16 @@ export default function TodayRouteScreen() {
     }
   }, [todayShops, allShops]);
 
-  // Open recovery sheet with duplicate check
+  // Open recovery sheet with duplicate check (per shop+company)
   const handleOpenRecovery = useCallback((shop: Shop) => {
-    if (recoverySubmittedShopIds.has(shop.id)) {
-      Alert.alert('Already Recovered', `Recovery for ${shop.name} has already been submitted today. You cannot submit duplicate recovery.`);
+    const currentCompanyId = selectedCompanyId || user?.companyId;
+    if (isRecoverySubmitted(shop.id, currentCompanyId)) {
+      const companyName = currentCompanyId ? ` under this company` : '';
+      Alert.alert('Already Recovered', `Recovery for ${shop.name}${companyName} has already been submitted today. You cannot submit duplicate recovery.`);
       return;
     }
     setRecoveryShop(shop);
-  }, [recoverySubmittedShopIds]);
+  }, [isRecoverySubmitted, selectedCompanyId, user?.companyId]);
 
   // ── Filtered shops (search) ──────────────────────────────────────────────
   const filteredShops = useMemo(() => {
@@ -1157,7 +1197,7 @@ export default function TodayRouteScreen() {
                 <ShopCard
                   shop={item.shop}
                   isVisited={visitedShopIds.has(item.shop.id)}
-                  hasRecovery={recoverySubmittedShopIds.has(item.shop.id)}
+                  hasRecovery={isRecoverySubmitted(item.shop.id, selectedCompanyId || user?.companyId)}
                   onCollect={() => handleOpenRecovery(item.shop)}
                   onPress={() => setDetailShop(item.shop)}
                   onGpsVisit={() => setGpsVisitShop(item.shop)}
@@ -1416,7 +1456,7 @@ export default function TodayRouteScreen() {
             <ShopCard
               shop={item}
               isVisited={visitedShopIds.has(item.id)}
-              hasRecovery={recoverySubmittedShopIds.has(item.id)}
+              hasRecovery={isRecoverySubmitted(item.id, selectedCompanyId || user?.companyId)}
               onCollect={() => handleOpenRecovery(item)}
               onPress={() => setDetailShop(item)}
               onGpsVisit={() => setGpsVisitShop(item)}
@@ -1449,14 +1489,14 @@ export default function TodayRouteScreen() {
         companyId={selectedCompanyId || user?.companyId}
         onClose={() => setDetailShop(null)}
         onCollect={() => {
-          if (detailShop && recoverySubmittedShopIds.has(detailShop.id)) {
-            Alert.alert('Already Recovered', `Recovery for ${detailShop.name} has already been submitted today.`);
+          if (detailShop && isRecoverySubmitted(detailShop.id, selectedCompanyId || user?.companyId)) {
+            Alert.alert('Already Recovered', `Recovery for ${detailShop.name} under this company has already been submitted today.`);
             return;
           }
           setRecoveryShop(detailShop);
           setDetailShop(null);
         }}
-        hasRecoveryToday={detailShop ? recoverySubmittedShopIds.has(detailShop.id) : false}
+        hasRecoveryToday={detailShop ? isRecoverySubmitted(detailShop.id, selectedCompanyId || user?.companyId) : false}
         onResendReceipt={() => {
           // Show the receipt modal again for regeneration
           if (lastReceiptData) {

@@ -2,8 +2,9 @@
 import { API_BASE_URL } from '@/constants/config';
 
 export interface CompanyBalance {
-  id: string;
+  id?: string;
   companyId: string;
+  companyName?: string;
   balance: number;
   creditLimit: number;
   company?: { id: string; name: string };
