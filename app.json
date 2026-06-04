@@ -19,6 +19,9 @@
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_MEDIA_IMAGES"
@@ -44,7 +47,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Finexa Recovery App to access your location for GPS verification during recovery collection."
+          "locationAlwaysAndWhenInUsePermission": "Allow Finexa to track your route location in the background for route monitoring.",
+          "locationWhenInUsePermission": "Allow Finexa to access your location for GPS verification during recovery collection."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo.png"
         }
       ],
       [
@@ -79,6 +89,6 @@
         "projectId": "7721513f-574c-4df3-befd-e9a8e8b7a0f6"
       }
     },
-    "owner": "djdisush"
+    "owner": "bilalahmadpk"
   }
 }
