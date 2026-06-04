@@ -23,6 +23,8 @@ const KEYS = {
   OFFLINE_PHONE_UPDATES: 'af_offline_phone_updates',
   DISTRIBUTOR_PHONE: 'af_distributor_phone', // saved locally for offline receipt use
   SELECTED_COMPANY_ID: 'af_selected_company_id', // persisted selected company
+  ROUTE_SESSION_ID: 'af_route_session_id', // active route session ID
+  ROUTE_SESSION_START: 'af_route_session_start', // ISO timestamp when route started
 };
 
 export interface PendingNotification {
@@ -594,6 +596,26 @@ export const StorageService = {
 
   getSelectedCompanyId: async (): Promise<string | null> => {
     return AsyncStorage.getItem(KEYS.SELECTED_COMPANY_ID);
+  },
+
+  // --- Route Session (active route tracking) ---
+  saveRouteSessionId: async (sessionId: string | null) => {
+    if (sessionId) {
+      await AsyncStorage.multiSet([
+        [KEYS.ROUTE_SESSION_ID, sessionId],
+        [KEYS.ROUTE_SESSION_START, new Date().toISOString()],
+      ]);
+    } else {
+      await AsyncStorage.multiRemove([KEYS.ROUTE_SESSION_ID, KEYS.ROUTE_SESSION_START]);
+    }
+  },
+
+  getRouteSessionId: async (): Promise<string | null> => {
+    return AsyncStorage.getItem(KEYS.ROUTE_SESSION_ID);
+  },
+
+  getRouteSessionStart: async (): Promise<string | null> => {
+    return AsyncStorage.getItem(KEYS.ROUTE_SESSION_START);
   },
 
   // --- Update phone in local shops cache (AsyncStorage) ---

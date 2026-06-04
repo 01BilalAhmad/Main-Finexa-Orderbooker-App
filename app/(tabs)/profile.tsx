@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useShops } from '@/hooks/useShops';
 import { useLock } from '@/hooks/useLock';
+import { useRouteTracking } from '@/contexts/RouteTrackingContext';
 import { ApiService } from '@/services/api';
 import { SecureStorageService } from '@/services/secureStorage';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
@@ -209,6 +210,7 @@ export default function ProfileScreen() {
   const { user, logout, updatePhone, companies, selectedCompanyId } = useAuth();
   const { allShops } = useShops();
   const { setNeedsPinSetup, lock } = useLock();
+  const { isTracking, isStarting, isStopping, startRoute, endRoute, startTime, error: routeError } = useRouteTracking();
 
   const [loggingOut, setLoggingOut] = useState(false);
   const [todayRecovery, setTodayRecovery] = useState(0);
@@ -535,6 +537,115 @@ export default function ProfileScreen() {
 
         {/* Performance Ranking */}
         <PerformanceRanking />
+
+        {/* ── Route Tracking Section ── */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionHeaderIcon}>
+            <MaterialIcons name="navigation" size={16} color="#4F46E5" />
+          </View>
+          <Text style={styles.sectionTitle}>Route Tracking</Text>
+        </View>
+
+        {routeError ? (
+          <View style={{
+            marginHorizontal: Spacing.md,
+            marginBottom: Spacing.sm,
+            backgroundColor: '#FEF2F2',
+            borderRadius: 12,
+            padding: 12,
+            borderWidth: 1,
+            borderColor: '#FECACA',
+          }}>
+            <Text style={{ fontSize: FontSize.xs, color: '#DC2626' }}>{routeError}</Text>
+          </View>
+        ) : null}
+
+        {isTracking ? (
+          <View style={{
+            marginHorizontal: Spacing.md,
+            marginBottom: Spacing.sm,
+            backgroundColor: '#ECFDF5',
+            borderRadius: 16,
+            padding: Spacing.md,
+            borderWidth: 1,
+            borderColor: '#A7F3D0',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <View style={{
+                width: 10, height: 10, borderRadius: 5,
+                backgroundColor: '#10B981',
+                // Simple pulse effect
+              }} />
+              <Text style={{ fontSize: FontSize.base, fontWeight: FontWeight.bold, color: '#065F46' }}>
+                Route Active
+              </Text>
+            </View>
+            <Text style={{ fontSize: FontSize.xs, color: '#047857', marginBottom: 12 }}>
+              Started at {startTime ? new Date(startTime).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' }) : '--:--'}
+              {'\n'}Your live location is being tracked on the admin panel.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                backgroundColor: pressed ? '#DC2626' : '#EF4444',
+                borderRadius: 12,
+                paddingVertical: 10,
+              }]}
+              onPress={() => {
+                Alert.alert(
+                  'End Route',
+                  'Are you sure you want to end the route? This will stop GPS tracking.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'End Route', style: 'destructive', onPress: endRoute },
+                  ]
+                );
+              }}
+              disabled={isStopping}
+            >
+              {isStopping ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <MaterialIcons name="stop" size={18} color="#FFFFFF" />
+                  <Text style={{ fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: '#FFFFFF' }}>
+                    End Route
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [actionStyles.card, pressed && { opacity: 0.9, transform: [{ scale: 0.995 }] }]}
+            onPress={() => {
+              Alert.alert(
+                'Start Route',
+                'Start tracking your route? Your live location will be visible to the admin panel.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Start Route', onPress: startRoute },
+                ]
+              );
+            }}
+            disabled={isStarting}
+          >
+            <View style={[actionStyles.iconWrap, { backgroundColor: '#ECFDF5' }]}>
+              {isStarting ? (
+                <ActivityIndicator size="small" color="#10B981" />
+              ) : (
+                <MaterialIcons name="navigation" size={20} color="#10B981" />
+              )}
+            </View>
+            <View style={actionStyles.textWrap}>
+              <Text style={actionStyles.title}>Start Route</Text>
+              <Text style={actionStyles.subtitle}>Begin GPS tracking for live route monitoring</Text>
+            </View>
+          </Pressable>
+        )}
 
         {/* ── Actions Section ── */}
         <View style={styles.sectionHeader}>
