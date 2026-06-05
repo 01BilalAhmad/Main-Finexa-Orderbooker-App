@@ -1,9 +1,14 @@
 // contexts/RouteTrackingContext.tsx — Route Session Management
-// Handles start/end route, background GPS, and session state
-// CRASH-SAFE: All native module calls are lazy and wrapped in try-catch
+// Handles start/end route, foreground GPS tracking, and session state
+// CRASH-SAFE: Uses expo-location watchPositionAsync() — no task-manager needed!
+//
+// TRACKING BEHAVIOR:
+// - App foreground: GPS updates every 30 seconds ✅
+// - App minimized: GPS pauses, auto-resumes when app returns ✅
+// - App killed: Session saved in storage, restored on next launch ✅
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, Component } from 'react';
-import { AppState, View, Text } from 'react-native';
+import { AppState } from 'react-native';
 import { StorageService } from '@/services/storage';
 import { useAuth } from './AuthContext';
 
@@ -71,7 +76,7 @@ export function useRouteTracking() {
   return useContext(RouteTrackingContext);
 }
 
-// ── Lazy-loaded native modules (prevents crash on import) ──────
+// ── Lazy-loaded modules (prevents crash on import) ─────────────────
 let _RouteTrackingService: any = null;
 let _backgroundLocation: any = null;
 
@@ -100,7 +105,7 @@ async function getBackgroundLocation() {
   return _backgroundLocation;
 }
 
-// ── Error Boundary ──────────────────────────────────────────────
+// ── Error Boundary ─────────────────────────────────────────────────
 class RouteTrackingErrorBoundary extends Component<
   { children: React.ReactNode },
   { hasError: boolean }
@@ -124,7 +129,7 @@ class RouteTrackingErrorBoundary extends Component<
   }
 }
 
-// ── Provider ────────────────────────────────────────────────────
+// ── Provider ───────────────────────────────────────────────────────
 function RouteTrackingProviderInner({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<RouteTrackingState>(initialState);
   const { user } = useAuth();
@@ -134,7 +139,7 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
   // Cleanup route tracking on logout (user becomes null)
   useEffect(() => {
     if (prevUserRef.current && !user) {
-      // User logged out — stop background tracking and reset state
+      // User logged out — stop tracking and reset state
       (async () => {
         try {
           const bg = await getBackgroundLocation();
@@ -176,11 +181,12 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
                 error: null,
               });
 
-              // Restart background tracking
+              // Restart GPS tracking (foreground watchPositionAsync)
               const bg = await getBackgroundLocation();
               if (bg) await bg.startBackgroundLocationTracking();
               console.log('[RouteTracking] Restored active session:', savedSessionId);
             } else {
+              // Session no longer active on server
               await StorageService.saveRouteSessionId(null);
               sessionIdRef.current = null;
             }
@@ -233,22 +239,27 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
     return () => clearInterval(interval);
   }, [state.isTracking, user?.id]);
 
-  // Flush offline locations when app comes to foreground
+  // Handle app foreground/background transitions
+  // When app returns to foreground: resume GPS tracking + flush offline locations
   useEffect(() => {
-    const flushOnResume = async () => {
-      if (state.isTracking && sessionIdRef.current) {
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === 'active' && state.isTracking && sessionIdRef.current) {
+        console.log('[RouteTracking] App came to foreground — resuming GPS tracking');
         try {
           const bg = await getBackgroundLocation();
-          if (bg) await bg.flushOfflineLocations(sessionIdRef.current!);
-        } catch {}
+          if (bg) {
+            // Resume tracking (restarts watchPositionAsync if needed)
+            await bg.resumeTrackingIfNeeded();
+            // Flush any locations that were queued while offline
+            await bg.flushOfflineLocations(sessionIdRef.current!);
+          }
+        } catch (error) {
+          console.error('[RouteTracking] Resume failed:', error);
+        }
       }
     };
 
-    const subscription = AppState.addEventListener('change', (nextState: string) => {
-      if (nextState === 'active') {
-        flushOnResume();
-      }
-    });
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => subscription?.remove();
   }, [state.isTracking]);
@@ -281,13 +292,13 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
       const session = result.session;
       sessionIdRef.current = session.id;
 
-      // Save to storage
+      // Save to storage (for crash/kill recovery)
       await StorageService.saveRouteSessionId(session.id);
 
-      // Start background GPS tracking
+      // Start GPS tracking — watchPositionAsync sends updates every 30 seconds
       const trackingStarted = await bg.startBackgroundLocationTracking();
       if (!trackingStarted) {
-        console.warn('[RouteTracking] Background tracking failed to start, route will still work but GPS updates may be limited');
+        console.warn('[RouteTracking] GPS tracking failed to start — route session created but no live GPS');
       }
 
       setState({
@@ -323,7 +334,7 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
       const bg = await getBackgroundLocation();
       const service = await getRouteTrackingService();
 
-      // Stop background tracking first
+      // Stop GPS tracking first
       if (bg) await bg.stopBackgroundLocationTracking();
 
       // Flush any remaining locations
@@ -378,7 +389,7 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
   );
 }
 
-// ── Exported Provider with Error Boundary ───────────────────────
+// ── Exported Provider with Error Boundary ──────────────────────────
 export function RouteTrackingProvider({ children }: { children: React.ReactNode }) {
   return (
     <RouteTrackingErrorBoundary>
