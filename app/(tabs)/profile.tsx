@@ -20,7 +20,29 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useShops } from '@/hooks/useShops';
 import { useLock } from '@/hooks/useLock';
-import { useRouteTracking } from '@/contexts/RouteTrackingContext';
+// CRASH-SAFE: Lazy import route tracking hook
+const useRouteTrackingSafe = () => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { useRouteTracking } = require('@/contexts/RouteTrackingContext');
+    return useRouteTracking();
+  } catch {
+    // Route tracking not available — return safe defaults
+    return {
+      isTracking: false,
+      sessionId: null,
+      session: null,
+      startTime: null,
+      lastProximity: null,
+      isStarting: false,
+      isStopping: false,
+      error: null,
+      startRoute: async () => {},
+      endRoute: async () => {},
+      clearError: () => {},
+    };
+  }
+};
 import { ApiService } from '@/services/api';
 import { SecureStorageService } from '@/services/secureStorage';
 import { Colors, Spacing, Radius, FontSize, FontWeight, Shadow } from '@/constants/theme';
@@ -210,7 +232,7 @@ export default function ProfileScreen() {
   const { user, logout, updatePhone, companies, selectedCompanyId } = useAuth();
   const { allShops } = useShops();
   const { setNeedsPinSetup, lock } = useLock();
-  const { isTracking, isStarting, isStopping, startRoute, endRoute, startTime, error: routeError } = useRouteTracking();
+  const { isTracking, isStarting, isStopping, startRoute, endRoute, startTime, error: routeError } = useRouteTrackingSafe();
 
   const [loggingOut, setLoggingOut] = useState(false);
   const [todayRecovery, setTodayRecovery] = useState(0);
