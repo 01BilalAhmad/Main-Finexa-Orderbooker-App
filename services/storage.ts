@@ -25,6 +25,7 @@ const KEYS = {
   SELECTED_COMPANY_ID: 'af_selected_company_id', // persisted selected company
   ROUTE_SESSION_ID: 'af_route_session_id', // active route session ID
   ROUTE_SESSION_START: 'af_route_session_start', // ISO timestamp when route started
+  OFFLINE_ROUTE_LOCATIONS: 'af_offline_route_locations', // GPS locations queued while offline
 };
 
 export interface PendingNotification {
@@ -616,6 +617,54 @@ export const StorageService = {
 
   getRouteSessionStart: async (): Promise<string | null> => {
     return AsyncStorage.getItem(KEYS.ROUTE_SESSION_START);
+  },
+
+  // --- Offline Route Locations (GPS waypoints saved when no internet) ---
+  // These persist across app kills/crashes — locations are NOT lost!
+  addOfflineRouteLocations: async (locations: Array<{
+    lat: number;
+    lng: number;
+    accuracy: number | null;
+    speed: number | null;
+    altitude: number | null;
+    batteryLevel: number | null;
+    isOffline: boolean;
+    recordedAt: string;
+  }>) => {
+    try {
+      const raw = await AsyncStorage.getItem(KEYS.OFFLINE_ROUTE_LOCATIONS);
+      const existing: Array<typeof locations[0]> = raw ? JSON.parse(raw) : [];
+      existing.push(...locations);
+      // Keep max 500 locations (about 4 hours at 30s intervals)
+      const trimmed = existing.length > 500 ? existing.slice(-500) : existing;
+      await AsyncStorage.setItem(KEYS.OFFLINE_ROUTE_LOCATIONS, JSON.stringify(trimmed));
+    } catch (e) {
+      console.error('[Storage] Failed to save offline route locations:', e);
+    }
+  },
+
+  getOfflineRouteLocations: async (): Promise<Array<{
+    lat: number;
+    lng: number;
+    accuracy: number | null;
+    speed: number | null;
+    altitude: number | null;
+    batteryLevel: number | null;
+    isOffline: boolean;
+    recordedAt: string;
+  }>> => {
+    try {
+      const raw = await AsyncStorage.getItem(KEYS.OFFLINE_ROUTE_LOCATIONS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  clearOfflineRouteLocations: async () => {
+    try {
+      await AsyncStorage.removeItem(KEYS.OFFLINE_ROUTE_LOCATIONS);
+    } catch {}
   },
 
   // --- Update phone in local shops cache (AsyncStorage) ---
