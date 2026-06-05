@@ -323,91 +323,50 @@ function RouteTrackingProviderInner({ children }: { children: React.ReactNode })
     }
   }, [user]);
 
-  // End the current route session — ROBUST with retry logic
+  // End the current route session
   const endRoute = useCallback(async () => {
     const currentSessionId = sessionIdRef.current;
     if (!currentSessionId) return;
 
     setState(prev => ({ ...prev, isStopping: true, error: null }));
 
-    let endLocation: { lat?: number; lng?: number; address?: string } | null = null;
-    let apiCallSucceeded = false;
-
     try {
       const bg = await getBackgroundLocation();
       const service = await getRouteTrackingService();
 
-      // Step 1: Stop GPS tracking FIRST (even if API call fails later, GPS must stop)
-      try {
-        if (bg) await bg.stopBackgroundLocationTracking();
-      } catch (gpsStopError) {
-        console.warn('[RouteTracking] GPS stop failed, continuing with end route:', gpsStopError);
-      }
+      // Stop GPS tracking first
+      if (bg) await bg.stopBackgroundLocationTracking();
 
-      // Step 2: Flush any remaining locations (before ending session on server)
-      try {
-        if (bg) await bg.flushOfflineLocations(currentSessionId);
-      } catch (flushError) {
-        console.warn('[RouteTracking] Flush failed, continuing with end route:', flushError);
-      }
+      // Flush any remaining locations
+      if (bg) await bg.flushOfflineLocations(currentSessionId);
 
-      // Step 3: Get current GPS for end location
-      try {
-        endLocation = bg ? await bg.getCurrentLocation() : null;
-      } catch (locError) {
-        console.warn('[RouteTracking] Get end location failed:', locError);
-      }
+      // Get current GPS for end location
+      const location = bg ? await bg.getCurrentLocation() : null;
 
-      // Step 4: Call API to end session — WITH RETRY (up to 3 attempts)
+      // Call API to end session
       if (service) {
-        const maxRetries = 3;
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          try {
-            const result = await service.endRoute({
-              sessionId: currentSessionId,
-              endLat: endLocation?.lat,
-              endLng: endLocation?.lng,
-              endAddress: endLocation?.address,
-            });
-            console.log('[RouteTracking] Route ended:', result.summary);
-            apiCallSucceeded = true;
-            break; // Success — exit retry loop
-          } catch (apiError: any) {
-            console.warn(`[RouteTracking] End route attempt ${attempt}/${maxRetries} failed:`, apiError.message);
-            if (attempt < maxRetries) {
-              // Wait before retrying (exponential backoff: 2s, 4s)
-              await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-            } else {
-              // All retries exhausted
-              console.error('[RouteTracking] All end route attempts failed');
-              throw apiError;
-            }
-          }
-        }
+        const result = await service.endRoute({
+          sessionId: currentSessionId,
+          endLat: location?.lat,
+          endLng: location?.lng,
+          endAddress: location?.address,
+        });
+        console.log('[RouteTracking] Route ended:', result.summary);
       }
 
-      // Step 5: Clear local state (regardless of API success, GPS is already stopped)
+      // Clear storage
       await StorageService.saveRouteSessionId(null);
       sessionIdRef.current = null;
 
       setState({
         ...initialState,
-        // If API failed but GPS stopped, still reset state but show a warning
-        error: !apiCallSucceeded ? 'Route ended locally but server may still show active. It will auto-update shortly.' : null,
       });
     } catch (error: any) {
       console.error('[RouteTracking] End failed:', error);
-
-      // Even on failure, clear local tracking state (GPS already stopped above)
-      // This prevents the app from being stuck in "stopping" state
-      try {
-        await StorageService.saveRouteSessionId(null);
-      } catch {}
-      sessionIdRef.current = null;
-
       setState(prev => ({
-        ...initialState,
-        error: error.message || 'Failed to end route on server. The route will be auto-ended shortly.',
+        ...prev,
+        isStopping: false,
+        error: error.message || 'Failed to end route',
       }));
     }
   }, []);

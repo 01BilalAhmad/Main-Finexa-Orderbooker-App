@@ -13,7 +13,6 @@
 // - App killed: Offline locations saved in AsyncStorage, restored on next launch ✅
 // - Net OFF → Net ON: Auto-sync queued locations ✅
 
-const LOCATION_TASK_NAME = 'finexa-background-location'; // Must match TaskManager.defineTask name
 const LOCATION_INTERVAL_MS = 30000; // 30 seconds between GPS pings
 const LOCATION_DISTANCE_M = 10; // minimum 10 meters between updates
 const MAX_OFFLINE_LOCATIONS = 2000; // max stored locally (~16 hours at 30s intervals = full working day)
@@ -213,13 +212,8 @@ async function handleLocationUpdate(coords: {
     const Storage = await getStorageService();
     const sessionId = Storage ? await Storage.getRouteSessionId() : null;
 
-    if (!sessionId || !_isWatching) {
-      // No active session or tracking stopped — discard the location
-      if (!_isWatching) {
-        console.warn('[GPS] Tracking stopped — discarding location update');
-      } else {
-        console.warn('[GPS] No active session ID, skipping location');
-      }
+    if (!sessionId) {
+      console.warn('[GPS] No active session ID, skipping location');
       return;
     }
 
@@ -314,49 +308,23 @@ export async function startBackgroundLocationTracking(): Promise<boolean> {
   }
 }
 
-// ── Stop GPS tracking — AGGRESSIVE cleanup ─────────────────────────
+// ── Stop GPS tracking ──────────────────────────────────────────────
 export async function stopBackgroundLocationTracking(): Promise<void> {
-  console.log('[GPS] stopBackgroundLocationTracking called');
-
-  // Step 1: Stop the watch subscription (most critical)
   try {
+    // Stop the watch subscription
     if (_watchSubscription) {
       _watchSubscription.remove();
       _watchSubscription = null;
     }
-  } catch (e) {
-    console.warn('[GPS] Failed to remove watch subscription:', e);
-    _watchSubscription = null;
-  }
-  _isWatching = false;
+    _isWatching = false;
 
-  // Step 2: Stop any background location task (expo-task-manager)
-  try {
-    const Location = await getLocationModule();
-    if (Location) {
-      const isRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).catch(() => false);
-      if (isRunning) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        console.log('[GPS] Background location task stopped');
-      }
-    }
-  } catch (e) {
-    console.warn('[GPS] Failed to stop background task:', e);
-  }
-
-  // Step 3: Remove NetInfo listener
-  try {
+    // Remove NetInfo listener
     if (_netInfoUnsubscribe) {
       _netInfoUnsubscribe();
       _netInfoUnsubscribe = null;
     }
-  } catch (e) {
-    console.warn('[GPS] Failed to remove NetInfo listener:', e);
-    _netInfoUnsubscribe = null;
-  }
 
-  // Step 4: Flush any remaining locations in queue (best effort)
-  try {
+    // Flush any remaining locations in queue
     const Storage = await getStorageService();
     if (Storage) {
       const sessionId = await Storage.getRouteSessionId();
@@ -364,19 +332,12 @@ export async function stopBackgroundLocationTracking(): Promise<void> {
         await flushLocationQueue(sessionId);
       }
     }
-  } catch (e) {
-    console.warn('[GPS] Failed to flush remaining locations:', e);
-  }
 
-  // Step 5: Clear queue and persisted locations
-  locationQueue = [];
-  try {
-    await clearPersistedLocations();
-  } catch (e) {
-    console.warn('[GPS] Failed to clear persisted locations:', e);
+    locationQueue = [];
+    console.log('[GPS] Stopped');
+  } catch (error) {
+    console.error('[GPS] Failed to stop:', error);
   }
-
-  console.log('[GPS] Stopped — all tracking resources cleaned up');
 }
 
 // ── Check if tracking is running ───────────────────────────────────
