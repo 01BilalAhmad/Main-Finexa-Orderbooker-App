@@ -42,7 +42,18 @@ async function routeRequest<T>(path: string, options?: RequestInit): Promise<T> 
   } catch {}
 
   const res = await fetch(url, { headers, ...options });
-  const data = await res.json();
+
+  // Safely parse JSON — handle non-JSON responses (HTML error pages, etc.)
+  let data: any;
+  try {
+    data = await res.json();
+  } catch (parseError) {
+    if (!res.ok) {
+      throw new Error(`Server unavailable (HTTP ${res.status}). Please try again later.`);
+    }
+    throw new Error('Unexpected response from server. Please try again later.');
+  }
+
   if (!res.ok) {
     throw new Error(data.error || `HTTP ${res.status}`);
   }

@@ -148,7 +148,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers,
     ...options,
   });
-  const data = await res.json();
+
+  // Safely parse JSON — handle non-JSON responses (HTML error pages, etc.)
+  let data: any;
+  try {
+    data = await res.json();
+  } catch (parseError) {
+    // Server returned non-JSON (e.g., Vercel DEPLOYMENT_NOT_FOUND page)
+    if (!res.ok) {
+      throw new Error(`Server unavailable (HTTP ${res.status}). Please check your internet connection and try again.`);
+    }
+    throw new Error('Unexpected response from server. Please try again later.');
+  }
+
   if (!res.ok) {
     throw new Error(data.error || `HTTP ${res.status}`);
   }
