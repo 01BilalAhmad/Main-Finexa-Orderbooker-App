@@ -15,7 +15,7 @@
 
 const LOCATION_INTERVAL_MS = 30000; // 30 seconds between GPS pings
 const LOCATION_DISTANCE_M = 10; // minimum 10 meters between updates
-const MAX_OFFLINE_LOCATIONS = 500; // max stored locally (~4 hours of tracking)
+const MAX_OFFLINE_LOCATIONS = 2000; // max stored locally (~16 hours at 30s intervals = full working day)
 
 // ── Queue for offline locations ────────────────────────────────────
 interface QueuedLocation {

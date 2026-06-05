@@ -635,8 +635,8 @@ export const StorageService = {
       const raw = await AsyncStorage.getItem(KEYS.OFFLINE_ROUTE_LOCATIONS);
       const existing: Array<typeof locations[0]> = raw ? JSON.parse(raw) : [];
       existing.push(...locations);
-      // Keep max 500 locations (about 4 hours at 30s intervals)
-      const trimmed = existing.length > 500 ? existing.slice(-500) : existing;
+      // Keep max 2000 locations (~16 hours at 30s intervals = full working day offline)
+      const trimmed = existing.length > 2000 ? existing.slice(-2000) : existing;
       await AsyncStorage.setItem(KEYS.OFFLINE_ROUTE_LOCATIONS, JSON.stringify(trimmed));
     } catch (e) {
       console.error('[Storage] Failed to save offline route locations:', e);
