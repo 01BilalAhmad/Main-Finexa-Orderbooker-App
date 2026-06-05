@@ -280,9 +280,9 @@ export const ApiService = {
     }),
 
   updateTransactionGps: (transactionId: string, payload: { gpsLat: number; gpsLng: number; gpsAddress?: string }) =>
-    request<{ success: boolean }>(`/api/transactions/${transactionId}`, {
+    request<{ success: boolean }>('/api/transactions', {
       method: 'PATCH',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ id: transactionId, ...payload, updatedBy: 'gps-backfill' }),
     }),
 
   recordVisit: (shopId: string, payload: {
