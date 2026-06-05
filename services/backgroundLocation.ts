@@ -1,11 +1,6 @@
 // services/backgroundLocation.ts — Background GPS Location Tracking
 // Uses expo-location foreground service to track GPS every 30 seconds
-
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
-import * as Battery from 'expo-battery';
-import { RouteTrackingService } from './routeTracking';
-import { StorageService } from './storage';
+// CRASH-SAFE: Native modules loaded lazily to prevent startup crash
 
 const BACKGROUND_LOCATION_TASK = 'background-route-tracking';
 const LOCATION_INTERVAL_MS = 30000; // 30 seconds
@@ -25,60 +20,127 @@ interface QueuedLocation {
 
 let locationQueue: QueuedLocation[] = [];
 let isSending = false;
+let taskDefined = false;
 
-// Define the background task
-if (!TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK)) {
-  TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
-    if (error) {
-      console.error('[BackgroundLocation] Task error:', error);
-      return;
+// Lazy-load native modules
+async function getLocationModule() {
+  try {
+    return await import('expo-location');
+  } catch (e) {
+    console.error('[BackgroundLocation] Failed to load expo-location:', e);
+    return null;
+  }
+}
+
+async function getTaskManagerModule() {
+  try {
+    return await import('expo-task-manager');
+  } catch (e) {
+    console.error('[BackgroundLocation] Failed to load expo-task-manager:', e);
+    return null;
+  }
+}
+
+async function getBatteryModule() {
+  try {
+    return await import('expo-battery');
+  } catch (e) {
+    console.error('[BackgroundLocation] Failed to load expo-battery:', e);
+    return null;
+  }
+}
+
+async function getRouteTrackingService() {
+  try {
+    const mod = await import('./routeTracking');
+    return mod.RouteTrackingService;
+  } catch (e) {
+    console.error('[BackgroundLocation] Failed to load RouteTrackingService:', e);
+    return null;
+  }
+}
+
+async function getStorageService() {
+  try {
+    const mod = await import('./storage');
+    return mod.StorageService;
+  } catch (e) {
+    console.error('[BackgroundLocation] Failed to load StorageService:', e);
+    return null;
+  }
+}
+
+// Define the background task LAZILY (only when first needed)
+async function ensureTaskDefined() {
+  if (taskDefined) return true;
+
+  const TaskManager = await getTaskManagerModule();
+  if (!TaskManager) return false;
+
+  try {
+    if (!TaskManager.isTaskDefined(BACKGROUND_LOCATION_TASK)) {
+      TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
+        if (error) {
+          console.error('[BackgroundLocation] Task error:', error);
+          return;
+        }
+
+        if (!data) return;
+
+        const Location = await getLocationModule();
+        if (!Location) return;
+
+        const { locations } = data as { locations: Location.LocationObject[] };
+        if (!locations || locations.length === 0) return;
+
+        const loc = locations[locations.length - 1];
+        const { coords } = loc;
+
+        if (!coords) return;
+
+        // Get battery level
+        let batteryLevel: number | null = null;
+        try {
+          const Battery = await getBatteryModule();
+          if (Battery) batteryLevel = await Battery.getBatteryLevelAsync();
+        } catch {}
+
+        // Get session ID from storage
+        let sessionId: string | null = null;
+        try {
+          const Storage = await getStorageService();
+          if (Storage) sessionId = await Storage.getRouteSessionId();
+        } catch {}
+
+        if (!sessionId) {
+          console.warn('[BackgroundLocation] No active session ID, skipping location');
+          return;
+        }
+
+        const locationData: QueuedLocation = {
+          lat: coords.latitude,
+          lng: coords.longitude,
+          accuracy: coords.accuracy ?? null,
+          speed: coords.speed ?? null,
+          altitude: coords.altitude ?? null,
+          batteryLevel,
+          isOffline: false,
+          recordedAt: new Date(loc.timestamp).toISOString(),
+        };
+
+        // Add to queue
+        locationQueue.push(locationData);
+
+        // Try to send immediately, or batch later
+        await flushLocationQueue(sessionId);
+      });
     }
-
-    if (!data) return;
-
-    const { locations } = data as { locations: Location.LocationObject[] };
-    if (!locations || locations.length === 0) return;
-
-    const loc = locations[locations.length - 1]; // Use the latest location
-    const { coords } = loc;
-
-    if (!coords) return;
-
-    // Get battery level
-    let batteryLevel: number | null = null;
-    try {
-      const batteryState = await Battery.getBatteryLevelAsync();
-      batteryLevel = batteryState;
-    } catch {}
-
-    // Get session ID from storage
-    let sessionId: string | null = null;
-    try {
-      sessionId = await StorageService.getRouteSessionId();
-    } catch {}
-
-    if (!sessionId) {
-      console.warn('[BackgroundLocation] No active session ID, skipping location');
-      return;
-    }
-
-    const locationData: QueuedLocation = {
-      lat: coords.latitude,
-      lng: coords.longitude,
-      accuracy: coords.accuracy ?? null,
-      speed: coords.speed ?? null,
-      altitude: coords.altitude ?? null,
-      batteryLevel,
-      isOffline: false,
-      recordedAt: new Date(loc.timestamp).toISOString(),
-    };
-
-    // Add to queue
-    locationQueue.push(locationData);
-
-    // Try to send immediately, or batch later
-    await flushLocationQueue(sessionId);
-  });
+    taskDefined = true;
+    return true;
+  } catch (e) {
+    console.error('[BackgroundLocation] Failed to define task:', e);
+    return false;
+  }
 }
 
 // Flush the location queue to the server
@@ -90,15 +152,20 @@ async function flushLocationQueue(sessionId: string) {
   locationQueue = [];
 
   try {
+    const service = await getRouteTrackingService();
+    if (!service) {
+      // Re-queue if service unavailable
+      locationQueue = batch.map(l => ({ ...l, isOffline: true })).concat(locationQueue);
+      return;
+    }
+
     if (batch.length === 1) {
-      // Single location — use single endpoint
-      await RouteTrackingService.sendLocation({
+      await service.sendLocation({
         sessionId,
         ...batch[0],
       });
     } else {
-      // Multiple locations — use batch endpoint
-      await RouteTrackingService.sendLocationsBatch({
+      await service.sendLocationsBatch({
         sessionId,
         locations: batch,
       });
@@ -125,6 +192,16 @@ async function flushLocationQueue(sessionId: string) {
 // Start background location tracking
 export async function startBackgroundLocationTracking(): Promise<boolean> {
   try {
+    const Location = await getLocationModule();
+    if (!Location) return false;
+
+    // Ensure the task is defined before starting
+    const taskReady = await ensureTaskDefined();
+    if (!taskReady) {
+      console.error('[BackgroundLocation] Task not defined, cannot start');
+      return false;
+    }
+
     // Request permissions
     const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
     if (foregroundStatus !== 'granted') {
@@ -135,7 +212,6 @@ export async function startBackgroundLocationTracking(): Promise<boolean> {
     const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
     if (backgroundStatus !== 'granted') {
       console.warn('[BackgroundLocation] Background permission denied, using foreground only');
-      // Fall back to foreground tracking
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
         accuracy: Location.Accuracy.High,
         timeInterval: LOCATION_INTERVAL_MS,
@@ -180,6 +256,9 @@ export async function startBackgroundLocationTracking(): Promise<boolean> {
 // Stop background location tracking
 export async function stopBackgroundLocationTracking(): Promise<void> {
   try {
+    const Location = await getLocationModule();
+    if (!Location) return;
+
     const isRunning = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
     if (isRunning) {
       await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
@@ -187,9 +266,12 @@ export async function stopBackgroundLocationTracking(): Promise<void> {
     }
 
     // Flush any remaining locations
-    const sessionId = await StorageService.getRouteSessionId();
-    if (sessionId && locationQueue.length > 0) {
-      await flushLocationQueue(sessionId);
+    const Storage = await getStorageService();
+    if (Storage) {
+      const sessionId = await Storage.getRouteSessionId();
+      if (sessionId && locationQueue.length > 0) {
+        await flushLocationQueue(sessionId);
+      }
     }
 
     locationQueue = [];
@@ -201,6 +283,8 @@ export async function stopBackgroundLocationTracking(): Promise<void> {
 // Check if background tracking is running
 export async function isBackgroundLocationRunning(): Promise<boolean> {
   try {
+    const Location = await getLocationModule();
+    if (!Location) return false;
     return await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
   } catch {
     return false;
@@ -215,6 +299,9 @@ export async function getCurrentLocation(): Promise<{
   address?: string;
 } | null> {
   try {
+    const Location = await getLocationModule();
+    if (!Location) return null;
+
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return null;
 
@@ -247,8 +334,11 @@ export async function getCurrentLocation(): Promise<{
 
 // Flush any pending offline locations (call on app resume)
 export async function flushOfflineLocations(sessionId?: string): Promise<void> {
-  const sid = sessionId || (await StorageService.getRouteSessionId());
-  if (sid && locationQueue.length > 0) {
-    await flushLocationQueue(sid);
-  }
+  try {
+    const Storage = await getStorageService();
+    const sid = sessionId || (Storage ? await Storage.getRouteSessionId() : null);
+    if (sid && locationQueue.length > 0) {
+      await flushLocationQueue(sid);
+    }
+  } catch {}
 }

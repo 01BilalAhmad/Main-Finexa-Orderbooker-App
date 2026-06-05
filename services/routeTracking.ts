@@ -1,8 +1,8 @@
 // services/routeTracking.ts — Route Tracking API Service
 // Handles all API calls for route session management
+// CRASH-SAFE: Uses dynamic imports for StorageService to prevent startup crashes
 
 import { API_BASE_URL } from '@/constants/config';
-import { StorageService } from './storage';
 
 // Types
 export interface RouteSession {
@@ -29,13 +29,14 @@ export interface ShopProximity {
   action: 'entered' | 'exited' | 'nearby' | null;
 }
 
-// Internal request helper (no auth token needed for route-sessions public endpoints)
+// Internal request helper
 async function routeRequest<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
   // Try to get token for authenticated requests
   try {
+    const { StorageService } = await import('./storage');
     const token = await StorageService.getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   } catch {}

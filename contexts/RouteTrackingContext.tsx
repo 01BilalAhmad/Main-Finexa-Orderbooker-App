@@ -1,19 +1,37 @@
 // contexts/RouteTrackingContext.tsx — Route Session Management
 // Handles start/end route, background GPS, and session state
+// CRASH-SAFE: All native module calls are lazy and wrapped in try-catch
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
-import { RouteTrackingService, RouteSession, ShopProximity } from '@/services/routeTracking';
-import {
-  startBackgroundLocationTracking,
-  stopBackgroundLocationTracking,
-  getCurrentLocation,
-  flushOfflineLocations,
-} from '@/services/backgroundLocation';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, Component } from 'react';
+import { AppState, View, Text } from 'react-native';
 import { StorageService } from '@/services/storage';
 import { useAuth } from './AuthContext';
 
 // ── Types ──────────────────────────────────────────────────────────
+interface RouteSession {
+  id: string;
+  orderbookerId: string;
+  startTime: string;
+  endTime: string | null;
+  startLat: number | null;
+  startLng: number | null;
+  startAddress: string | null;
+  endLat: number | null;
+  endLng: number | null;
+  endAddress: string | null;
+  totalDistance: number;
+  totalDuration: number | null;
+  status: 'active' | 'ended' | 'auto_ended';
+  autoEndReason: string | null;
+}
+
+interface ShopProximity {
+  shopId: string;
+  shopName: string;
+  distance: number;
+  action: 'entered' | 'exited' | 'nearby' | null;
+}
+
 interface RouteTrackingState {
   isTracking: boolean;
   sessionId: string | null;
@@ -53,7 +71,61 @@ export function useRouteTracking() {
   return useContext(RouteTrackingContext);
 }
 
-export function RouteTrackingProvider({ children }: { children: React.ReactNode }) {
+// ── Lazy-loaded native modules (prevents crash on import) ──────
+let _RouteTrackingService: any = null;
+let _backgroundLocation: any = null;
+
+async function getRouteTrackingService() {
+  if (!_RouteTrackingService) {
+    try {
+      const mod = await import('@/services/routeTracking');
+      _RouteTrackingService = mod.RouteTrackingService;
+    } catch (e) {
+      console.error('[RouteTracking] Failed to load RouteTrackingService:', e);
+      return null;
+    }
+  }
+  return _RouteTrackingService;
+}
+
+async function getBackgroundLocation() {
+  if (!_backgroundLocation) {
+    try {
+      _backgroundLocation = await import('@/services/backgroundLocation');
+    } catch (e) {
+      console.error('[RouteTracking] Failed to load backgroundLocation:', e);
+      return null;
+    }
+  }
+  return _backgroundLocation;
+}
+
+// ── Error Boundary ──────────────────────────────────────────────
+class RouteTrackingErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[RouteTracking] ErrorBoundary caught:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Silently fail — app still works, just no route tracking
+      return this.props.children;
+    }
+    return this.props.children;
+  }
+}
+
+// ── Provider ────────────────────────────────────────────────────
+function RouteTrackingProviderInner({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<RouteTrackingState>(initialState);
   const { user } = useAuth();
   const sessionIdRef = useRef<string | null>(null);
@@ -63,7 +135,12 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (prevUserRef.current && !user) {
       // User logged out — stop background tracking and reset state
-      stopBackgroundLocationTracking().catch(() => {});
+      (async () => {
+        try {
+          const bg = await getBackgroundLocation();
+          if (bg) await bg.stopBackgroundLocationTracking();
+        } catch {}
+      })();
       sessionIdRef.current = null;
       setState(initialState);
       console.log('[RouteTracking] Cleaned up on logout');
@@ -81,9 +158,11 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
         const savedStart = await StorageService.getRouteSessionStart();
 
         if (savedSessionId) {
-          // Verify session is still active on server
+          const service = await getRouteTrackingService();
+          if (!service) return;
+
           try {
-            const result = await RouteTrackingService.getActiveSession(user.id);
+            const result = await service.getActiveSession(user.id);
             if (result.session && result.session.id === savedSessionId && result.session.status === 'active') {
               sessionIdRef.current = savedSessionId;
               setState({
@@ -98,10 +177,10 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
               });
 
               // Restart background tracking
-              await startBackgroundLocationTracking();
+              const bg = await getBackgroundLocation();
+              if (bg) await bg.startBackgroundLocationTracking();
               console.log('[RouteTracking] Restored active session:', savedSessionId);
             } else {
-              // Session no longer active, clear storage
               await StorageService.saveRouteSessionId(null);
               sessionIdRef.current = null;
             }
@@ -114,7 +193,8 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
               sessionId: savedSessionId,
               startTime: savedStart,
             }));
-            await startBackgroundLocationTracking();
+            const bg = await getBackgroundLocation();
+            if (bg) await bg.startBackgroundLocationTracking();
           }
         }
       } catch (error) {
@@ -125,17 +205,19 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
     restoreSession();
   }, [user?.id]);
 
-  // Check for midnight auto-end (server auto-ends at 12 AM PKT)
+  // Check for midnight auto-end
   useEffect(() => {
     if (!state.isTracking) return;
 
     const interval = setInterval(async () => {
       try {
         if (!user || !sessionIdRef.current) return;
-        const result = await RouteTrackingService.getActiveSession(user.id);
+        const service = await getRouteTrackingService();
+        if (!service) return;
+        const result = await service.getActiveSession(user.id);
         if (!result.session || result.session.status !== 'active') {
-          // Session was auto-ended by server
-          await stopBackgroundLocationTracking();
+          const bg = await getBackgroundLocation();
+          if (bg) await bg.stopBackgroundLocationTracking();
           await StorageService.saveRouteSessionId(null);
           sessionIdRef.current = null;
           setState({
@@ -146,7 +228,7 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
           });
         }
       } catch {}
-    }, 60000); // Check every 60 seconds
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [state.isTracking, user?.id]);
@@ -155,11 +237,13 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const flushOnResume = async () => {
       if (state.isTracking && sessionIdRef.current) {
-        await flushOfflineLocations(sessionIdRef.current);
+        try {
+          const bg = await getBackgroundLocation();
+          if (bg) await bg.flushOfflineLocations(sessionIdRef.current!);
+        } catch {}
       }
     };
 
-    // Listen for app state changes
     const subscription = AppState.addEventListener('change', (nextState: string) => {
       if (nextState === 'active') {
         flushOnResume();
@@ -176,11 +260,18 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
     setState(prev => ({ ...prev, isStarting: true, error: null }));
 
     try {
+      const bg = await getBackgroundLocation();
+      const service = await getRouteTrackingService();
+      if (!service || !bg) {
+        setState(prev => ({ ...prev, isStarting: false, error: 'Route tracking not available' }));
+        return;
+      }
+
       // Get current GPS location
-      const location = await getCurrentLocation();
+      const location = await bg.getCurrentLocation();
 
       // Call API to start session
-      const result = await RouteTrackingService.startRoute({
+      const result = await service.startRoute({
         orderbookerId: user.id,
         startLat: location?.lat,
         startLng: location?.lng,
@@ -194,7 +285,7 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
       await StorageService.saveRouteSessionId(session.id);
 
       // Start background GPS tracking
-      const trackingStarted = await startBackgroundLocationTracking();
+      const trackingStarted = await bg.startBackgroundLocationTracking();
       if (!trackingStarted) {
         console.warn('[RouteTracking] Background tracking failed to start, route will still work but GPS updates may be limited');
       }
@@ -229,22 +320,28 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
     setState(prev => ({ ...prev, isStopping: true, error: null }));
 
     try {
+      const bg = await getBackgroundLocation();
+      const service = await getRouteTrackingService();
+
       // Stop background tracking first
-      await stopBackgroundLocationTracking();
+      if (bg) await bg.stopBackgroundLocationTracking();
 
       // Flush any remaining locations
-      await flushOfflineLocations(currentSessionId);
+      if (bg) await bg.flushOfflineLocations(currentSessionId);
 
       // Get current GPS for end location
-      const location = await getCurrentLocation();
+      const location = bg ? await bg.getCurrentLocation() : null;
 
       // Call API to end session
-      const result = await RouteTrackingService.endRoute({
-        sessionId: currentSessionId,
-        endLat: location?.lat,
-        endLng: location?.lng,
-        endAddress: location?.address,
-      });
+      if (service) {
+        const result = await service.endRoute({
+          sessionId: currentSessionId,
+          endLat: location?.lat,
+          endLng: location?.lng,
+          endAddress: location?.address,
+        });
+        console.log('[RouteTracking] Route ended:', result.summary);
+      }
 
       // Clear storage
       await StorageService.saveRouteSessionId(null);
@@ -253,8 +350,6 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
       setState({
         ...initialState,
       });
-
-      console.log('[RouteTracking] Route ended:', result.summary);
     } catch (error: any) {
       console.error('[RouteTracking] End failed:', error);
       setState(prev => ({
@@ -280,5 +375,16 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
     >
       {children}
     </RouteTrackingContext.Provider>
+  );
+}
+
+// ── Exported Provider with Error Boundary ───────────────────────
+export function RouteTrackingProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <RouteTrackingErrorBoundary>
+      <RouteTrackingProviderInner>
+        {children}
+      </RouteTrackingProviderInner>
+    </RouteTrackingErrorBoundary>
   );
 }
