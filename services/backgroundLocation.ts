@@ -1,6 +1,7 @@
 // services/backgroundLocation.ts — Background GPS Location Tracking
 // Uses expo-location foreground service to track GPS every 30 seconds
-// CRASH-SAFE: Native modules loaded lazily to prevent startup crash
+// NOTE: expo-battery and expo-task-manager removed — battery level is null, 
+// tracking uses expo-location's built-in foreground service instead
 
 const BACKGROUND_LOCATION_TASK = 'background-route-tracking';
 const LOCATION_INTERVAL_MS = 30000; // 30 seconds
@@ -13,7 +14,7 @@ interface QueuedLocation {
   accuracy: number | null;
   speed: number | null;
   altitude: number | null;
-  batteryLevel: number | null;
+  batteryLevel: number | null; // Always null — expo-battery not installed
   isOffline: boolean;
   recordedAt: string;
 }
@@ -22,37 +23,39 @@ let locationQueue: QueuedLocation[] = [];
 let isSending = false;
 let taskDefined = false;
 
-// Lazy-load native modules
+// Lazy-load expo-location (only when needed)
+let _Location: typeof import('expo-location') | null = null;
+
 async function getLocationModule() {
-  try {
-    return await import('expo-location');
-  } catch (e) {
-    console.error('[BackgroundLocation] Failed to load expo-location:', e);
-    return null;
+  if (!_Location) {
+    try {
+      _Location = require('expo-location');
+    } catch (e) {
+      console.error('[BackgroundLocation] Failed to load expo-location:', e);
+      return null;
+    }
   }
+  return _Location;
 }
+
+// Lazy-load expo-task-manager
+let _TaskManager: typeof import('expo-task-manager') | null = null;
 
 async function getTaskManagerModule() {
-  try {
-    return await import('expo-task-manager');
-  } catch (e) {
-    console.error('[BackgroundLocation] Failed to load expo-task-manager:', e);
-    return null;
+  if (!_TaskManager) {
+    try {
+      _TaskManager = require('expo-task-manager');
+    } catch (e) {
+      console.error('[BackgroundLocation] Failed to load expo-task-manager:', e);
+      return null;
+    }
   }
-}
-
-async function getBatteryModule() {
-  try {
-    return await import('expo-battery');
-  } catch (e) {
-    console.error('[BackgroundLocation] Failed to load expo-battery:', e);
-    return null;
-  }
+  return _TaskManager;
 }
 
 async function getRouteTrackingService() {
   try {
-    const mod = await import('./routeTracking');
+    const mod = require('./routeTracking');
     return mod.RouteTrackingService;
   } catch (e) {
     console.error('[BackgroundLocation] Failed to load RouteTrackingService:', e);
@@ -62,7 +65,7 @@ async function getRouteTrackingService() {
 
 async function getStorageService() {
   try {
-    const mod = await import('./storage');
+    const mod = require('./storage');
     return mod.StorageService;
   } catch (e) {
     console.error('[BackgroundLocation] Failed to load StorageService:', e);
@@ -98,13 +101,6 @@ async function ensureTaskDefined() {
 
         if (!coords) return;
 
-        // Get battery level
-        let batteryLevel: number | null = null;
-        try {
-          const Battery = await getBatteryModule();
-          if (Battery) batteryLevel = await Battery.getBatteryLevelAsync();
-        } catch {}
-
         // Get session ID from storage
         let sessionId: string | null = null;
         try {
@@ -123,7 +119,7 @@ async function ensureTaskDefined() {
           accuracy: coords.accuracy ?? null,
           speed: coords.speed ?? null,
           altitude: coords.altitude ?? null,
-          batteryLevel,
+          batteryLevel: null, // expo-battery not installed
           isOffline: false,
           recordedAt: new Date(loc.timestamp).toISOString(),
         };
@@ -154,7 +150,6 @@ async function flushLocationQueue(sessionId: string) {
   try {
     const service = await getRouteTrackingService();
     if (!service) {
-      // Re-queue if service unavailable
       locationQueue = batch.map(l => ({ ...l, isOffline: true })).concat(locationQueue);
       return;
     }
@@ -172,17 +167,12 @@ async function flushLocationQueue(sessionId: string) {
     }
   } catch (error) {
     console.error('[BackgroundLocation] Failed to send, re-queuing:', error);
-    // Re-queue with isOffline flag
     locationQueue = batch.map(l => ({ ...l, isOffline: true })).concat(locationQueue);
-
-    // Limit queue size to prevent memory issues
     if (locationQueue.length > 200) {
       locationQueue = locationQueue.slice(-200);
     }
   } finally {
     isSending = false;
-
-    // If more queued, try again
     if (locationQueue.length > 0) {
       setTimeout(() => flushLocationQueue(sessionId), 5000);
     }
@@ -195,14 +185,12 @@ export async function startBackgroundLocationTracking(): Promise<boolean> {
     const Location = await getLocationModule();
     if (!Location) return false;
 
-    // Ensure the task is defined before starting
     const taskReady = await ensureTaskDefined();
     if (!taskReady) {
       console.error('[BackgroundLocation] Task not defined, cannot start');
       return false;
     }
 
-    // Request permissions
     const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
     if (foregroundStatus !== 'granted') {
       console.error('[BackgroundLocation] Foreground permission denied');
@@ -226,7 +214,6 @@ export async function startBackgroundLocationTracking(): Promise<boolean> {
       return true;
     }
 
-    // Start background location updates
     const isRunning = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
     if (isRunning) {
       console.log('[BackgroundLocation] Already running');
@@ -265,7 +252,6 @@ export async function stopBackgroundLocationTracking(): Promise<void> {
       console.log('[BackgroundLocation] Stopped');
     }
 
-    // Flush any remaining locations
     const Storage = await getStorageService();
     if (Storage) {
       const sessionId = await Storage.getRouteSessionId();

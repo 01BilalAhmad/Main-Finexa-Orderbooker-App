@@ -7,7 +7,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ShopsProvider } from '@/contexts/ShopsContext';
 import { LockProvider } from '@/contexts/LockContext';
-import { RouteTrackingProvider } from '@/contexts/RouteTrackingContext';
 import { LockOverlay } from '@/components/LockOverlay';
 import { BismillahSplash } from '@/components/BismillahSplash';
 
@@ -32,17 +31,15 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <ShopsProvider>
-          <RouteTrackingProvider>
-            <LockProvider>
-              <StatusBar style="dark" />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="login" />
-                <Stack.Screen name="(tabs)" />
-              </Stack>
-              <LockOverlay />
-            </LockProvider>
-          </RouteTrackingProvider>
+          <LockProvider>
+            <StatusBar style="dark" />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="login" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+            <LockOverlay />
+          </LockProvider>
         </ShopsProvider>
       </AuthProvider>
 

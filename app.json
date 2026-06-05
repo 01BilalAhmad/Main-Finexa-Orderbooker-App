@@ -52,12 +52,6 @@
         }
       ],
       [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/logo.png"
-        }
-      ],
-      [
         "./plugins/withDirectSms.js",
         {
           "sendSmsPermission": "Allow Finexa Recovery App to send SMS notifications for recovery updates."
