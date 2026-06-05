@@ -266,6 +266,35 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
+    // If route is active, warn user first
+    if (isTracking) {
+      Alert.alert(
+        'Active Route Detected',
+        'You have an active route session. Logging out will stop route tracking. Do you want to end the route and logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'End Route & Logout',
+            style: 'destructive',
+            onPress: async () => {
+              setLoggingOut(true);
+              try {
+                await endRoute();
+              } catch {}
+              try {
+                await logout();
+                await SecureStorageService.clearAll();
+                router.replace('/login' as any);
+              } finally {
+                setLoggingOut(false);
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       {

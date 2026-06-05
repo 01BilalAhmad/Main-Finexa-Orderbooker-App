@@ -106,7 +106,7 @@ export const StorageService = {
   },
 
   clearSession: async () => {
-    await AsyncStorage.multiRemove([KEYS.USER, KEYS.TOKEN]);
+    await AsyncStorage.multiRemove([KEYS.USER, KEYS.TOKEN, KEYS.ROUTE_SESSION_ID, KEYS.ROUTE_SESSION_START]);
   },
 
   saveShops: async (shops: Shop[]) => {

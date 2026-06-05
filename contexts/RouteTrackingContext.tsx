@@ -2,6 +2,7 @@
 // Handles start/end route, background GPS, and session state
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { RouteTrackingService, RouteSession, ShopProximity } from '@/services/routeTracking';
 import {
   startBackgroundLocationTracking,
@@ -56,6 +57,19 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
   const [state, setState] = useState<RouteTrackingState>(initialState);
   const { user } = useAuth();
   const sessionIdRef = useRef<string | null>(null);
+  const prevUserRef = useRef<string | null>(null);
+
+  // Cleanup route tracking on logout (user becomes null)
+  useEffect(() => {
+    if (prevUserRef.current && !user) {
+      // User logged out — stop background tracking and reset state
+      stopBackgroundLocationTracking().catch(() => {});
+      sessionIdRef.current = null;
+      setState(initialState);
+      console.log('[RouteTracking] Cleaned up on logout');
+    }
+    prevUserRef.current = user?.id || null;
+  }, [user?.id]);
 
   // Restore session from storage on mount
   useEffect(() => {
@@ -146,7 +160,6 @@ export function RouteTrackingProvider({ children }: { children: React.ReactNode 
     };
 
     // Listen for app state changes
-    const { AppState } = require('react-native');
     const subscription = AppState.addEventListener('change', (nextState: string) => {
       if (nextState === 'active') {
         flushOnResume();

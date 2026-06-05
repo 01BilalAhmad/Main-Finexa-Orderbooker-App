@@ -2,6 +2,7 @@
 // Handles all API calls for route session management
 
 import { API_BASE_URL } from '@/constants/config';
+import { StorageService } from './storage';
 
 // Types
 export interface RouteSession {
@@ -35,7 +36,6 @@ async function routeRequest<T>(path: string, options?: RequestInit): Promise<T> 
 
   // Try to get token for authenticated requests
   try {
-    const { StorageService } = require('./storage');
     const token = await StorageService.getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   } catch {}
